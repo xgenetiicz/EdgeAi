@@ -1,0 +1,71 @@
+version: '3.8'
+
+# ==============================================================================
+# Bachelor: Edge AI Kjøretøyidentifikasjon - Komplett Infrastruktur
+# Denne stakken kjører på Raspberry Pi 5 (16GB RAM) med 2TB NVMe-lagring.
+# ==============================================================================
+
+services:
+  # 1. Gateway (Caddy) - Reverse Proxy & HTTPS - trenger dette Cloudflare connection med domene.
+  gateway:
+    image: caddy:latest
+    container_name: gateway
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /media/genetiicz/storage/bil/gateway/Caddyfile:/etc/caddy/Caddyfile
+      - /media/genetiicz/storage/bil/gateway/data:/data
+      - /media/genetiicz/storage/bil/gateway/config:/config
+
+  # 2. MQTT (Mosquitto) - Broker for Edge AI-data (ESP32-CAM)
+  mqtt:
+    image: eclipse-mosquitto:latest
+    container_name: mqtt
+    restart: always
+    ports:
+      - "1883:1883"
+    volumes:
+      - /media/genetiicz/storage/bil/mqtt/config:/mosquitto/config
+      - /media/genetiicz/storage/bil/mqtt/data:/mosquitto/data
+      - /media/genetiicz/storage/bil/mqtt/log:/mosquitto/log
+
+  # 3. Database (InfluxDB) - Historisk lagring av kjøretøydata
+  db:
+    image: influxdb:latest
+    container_name: db
+    restart: always
+    ports:
+      - "8086:8086"
+    volumes:
+      - /media/genetiicz/storage/bil/db:/var/lib/influxdb
+    environment:
+      - DOCKER_INFLUXDB_INIT_MODE=setup
+      - DOCKER_INFLUXDB_INIT_USERNAME=genetiicz
+      - DOCKER_INFLUXDB_INIT_PASSWORD=${INFLUX_PW}
+      - DOCKER_INFLUXDB_INIT_ORG=bachelor
+      - DOCKER_INFLUXDB_INIT_BUCKET=bil_data
+
+  # 4. Cache (Redis) - Lynrask mellomlagring av API-svar fra Vegvesenet
+  cache:
+    image: redis:latest
+    container_name: cache
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - /media/genetiicz/storage/bil/cache:/data
+
+  # 5. Logic (Node-RED) - Systemets hjerne og API-integrasjon
+  logic:
+    image: nodered/node-red:latest
+    container_name: logic
+    restart: always
+    user: "1000:1000"
+    ports:
+      - "1880:1880"
+    volumes:
+      - /media/genetiicz/storage/bil/logic:/data
+    environment:
+      - TZ=Europe/Oslo

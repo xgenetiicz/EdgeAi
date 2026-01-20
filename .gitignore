@@ -1,0 +1,25 @@
+# Skjul sensitive filer
+.env
+*.env
+
+# Database og logger (viktig for InfluxDB og Mosquitto)
+**/db/
+**/data/
+**/log/
+**/mosquitto/data/
+**/mosquitto/log/
+
+# Skjul konfigurasjon for Gateway
+Caddyfile
+
+# Node-RED spesifikke filer
+nodered/node_modules/
+nodered/.config.json
+nodered/.sessions.json
+
+# Operativsystem-støy
+.DS_Store
+Thumbs.db
+
+# Andre logger
+*.log

@@ -69,3 +69,5 @@ services:
       - /media/genetiicz/storage/bil/logic:/data
     environment:
       - TZ=Europe/Oslo
+      - SVV_API_KEY=${SVV_API_KEY}  #Crucial
+      #The variable name must be SVV_API_KEY so that the api works, and it fetch the key from .env

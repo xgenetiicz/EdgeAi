@@ -40,6 +40,7 @@ services:
       - "8086:8086"
     volumes:
       - /media/genetiicz/storage/bil/db:/var/lib/influxdb2
+      - /media/genetiicz/storage/bil/db_config:/etc/influxdb2 # Mister ikke volum og gjenbruker samme volum
     environment:
       - DOCKER_INFLUXDB_INIT_MODE=setup
       - DOCKER_INFLUXDB_INIT_USERNAME=genetiicz

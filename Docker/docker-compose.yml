@@ -33,7 +33,7 @@ services:
 
   # 3. Database (InfluxDB) - Historisk lagring av kjøretøydata
   db:
-    image: influxdb:latest
+    image: influxdb:2
     container_name: db
     restart: always
     ports:

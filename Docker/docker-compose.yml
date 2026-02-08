@@ -68,7 +68,8 @@ services:
     ports:
       - "1880:1880"
     volumes:
-      - /media/genetiicz/storage/bil/logic:/data
+      - /media/genetiicz/storage/bil/logic:/data #Dette er logikken til Node - Red, her ligger flows.json
+      - /media/genetiicz/storage/bil/bilder:/bilder #Dette er data(bilder) av skilt og bil!
     environment:
       - TZ=Europe/Oslo
       - SVV_API_KEY=${SVV_API_KEY}  #Crucial

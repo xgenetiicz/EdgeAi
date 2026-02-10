@@ -54,6 +54,6 @@ samt teknisk data for mottak av et skiltnummer, der det utføres et teknisk enke
 Her finner dere detaljert dokumentasjon for de ulike fasene og komponentene i **prosjektet**:
 
 * **[01 - Systemarkitektur og Infrastruktur](./Docs/01-Systemarkitektur.md):** Beskrivelse av maskinvare (Pi 5, NVMe), Docker-oppsett og sikkerhet.
-* **[02 - Edge-enhet: Datafangst](./Docs/02-Edge-enhet.md):** Teknisk oppsett av ESP32-CAM, kamerasensor og lokal lagring.
-* **[03 - Dataflyt og Backend](./Docs/03-Dataflyt-og-Backend.md):** Dokumentasjon av Base64-overføring, Flask-mottaker og lagringslogikk.
-* **[04 - Integrasjon og Analyse-logikk](./Docs/04-Logikk-og-Integrasjon.md):** Detaljer rundt Node-RED, API-oppslag mot Statens Vegvesen og "DeepFind"-algoritmen.
+* **[02 - Dataflyt og Backend](./Docs/02-Dataflyt-og-Backend.md):** Dokumentasjon av Base64-overføring, Flask-mottaker og lagringslogikk.
+* **[03 - Edge-enhet](./Docs/03-Edge-enhet.md):** Teknisk oppsett av ESP32-CAM, kamerasensor og lokal lagring.
+* **[04 - Edge & Server](./Docs/04-Edge-og-Server.md):** Detaljer rundt Node-RED, API-oppslag mot Statens Vegvesen og "DeepFind"-algoritmen.

@@ -30,16 +30,7 @@ Dette repositoriet er klargjort for offentlig publisering.
 Passord og sensitive data håndteres via en `.env`-fil som er ekskludert fra versjonskontroll via `.gitignore`. 
 Dette er for å ivareta sikkerheten til IoT - applikasjonen vår og databasen.
 
-**For å kjøre systemet:**
-1. Gå inn i `.env`.
-2. Fyll inn passord for `INFLUX_PW`.
-3. Kjør `docker compose up -d`.
-4. Skal du kjøre dette på din egen PC - må du konfigurere stacken fordi volumes er satt til serveren,
-så du er nødt til å konfigurere volumes til din lagring av hvor du ønsker dette er kjøre. Basically legge dette på
-din egen filsti -> ssd.
-
----
-
+---------------------------------------------------------------------------------------
 ## API-integrasjon
 Systemet er integrert mot **Statens Vegvesen sitt Autosys-API**. 
 Dette er API som er offentlig gjort ved bestilling som privat person, der dette gir kjøretøyopplysninger

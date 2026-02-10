@@ -77,8 +77,8 @@ services:
 
   image-processor:
     build: 
-      context: .
-      dockerfile: ./Script/Dockerfile
+      context: ../Script 
+      dockerfile: Dockerfile
     container_name: image_processor
     restart: always
     ports:

@@ -21,6 +21,18 @@ Systemet benytter en **Edge AI**-tilnærming der all tung prosessering skjer lok
 ### Automatisk Visualisering
 Tidligere krevde tegning av rammer manuell beregning av koordinater ($x_1, y_1, x_2, y_2$). Ved å implementere `results[0].plot()`, har vi automatisert denne prosessen:
 
+## Refleksjonsnotat: Modelloptimalisering
+
+Gjennom utviklingen ble systemet testet med tre iterasjoner av YOLOv8 for å finne balansen mellom ytelse og nøyaktighet med tanke på ytelsen til kameraet (esp32):
+
+* **YOLOv8-Nano:** Forkastet grunnet lav konfidens mellom 25 % og 55 %. 
+* **YOLOv8-Nano (Feil):** Modellen produserte hyppige feilklassifiseringer som "umbrella" eller "suitcase".
+* **YOLOv8-Medium:** Viste forbedring med treffsikkerhet opptil 90 % på enkelte objekter. 
+* **YOLOv8-Medium (Instabilitet):** Slet med stabilitet og forveksling mellom objekter som "remote" og "keyboard" under krevende forhold.
+* **YOLOv8-XL:** Implementert som endelig løsning ved utnyttelse av Raspberry Pi 5 med 16 GB RAM. 
+* **YOLOv8-XL (Ytelse):** Leverer stabil presisjon over 90 % for kritiske objekter og 93 % for personidentifikasjon.
+
+**Konklusjon:** Kombinasjonen av XL-modell og en konfidensterskel på 0.7 eliminerer usikker gjetting og sikrer pålitelige visuelle bevis - men i bunn og grunn så er det ikke AI modellen som er avviket, men kameraet (esp32). Det er for dårlig oppløsning, og med en slik oppløsning så kan dette resultere i feil for hovedfunksjonen til å faktisk identifisere bil og skiltnummer. Kort og presist så er flaskehalsen oppløsning og sensorstøy.
 ```python
 # Automatisk tegning av bokser og navn basert på AI-ens funn
 # Dette fjerner behovet for manuell piksel-manipulasjon.

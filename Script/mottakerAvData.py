@@ -46,7 +46,8 @@ def upload():
         img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
 
         # AI IDENTIFISERING (Automatisk)
-        results = model(img, verbose=False, conf=0.7) #setter conf til 0.7 for å fjerne gjetting av støy i bildet.
+        # VIKTIG: Satt ned til 0.01 for å feilsøke bildekvalitet
+        results = model(img, verbose=False, conf=0.01) 
         
         # Sjekk om vi fant noen 'TARGET_OBJECTS'
         found_interesting = False
@@ -57,8 +58,9 @@ def upload():
                     found_interesting = True
                     break
         
-        # Når vi finner noe bruker vi AI-ens innebygde tegnefunksjon
-        if found_interesting:
+        # MIDLERTIDIG TEST: Endret fra 'if found_interesting' til 'if True'
+        # Dette tvinger lagring av ALLE bilder som kommer inn for å sjekke SSD og kvalitet.
+        if True: 
             # .plot() tegner bokser og navn på bildet helt AUTOMATISK -- dette gjør den ved ta hensyn til koordinater
             # som x1, y1.
             annotated_frame = results[0].plot() 
@@ -74,14 +76,14 @@ def upload():
                                     cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 3)
 
             #Lagre på serveren (raspberry pi 5)
-            filename = f"deteksjon_{int(time.time())}.jpg"
+            filename = f"debug_test_{int(time.time())}.jpg"
             filepath = os.path.join(SAVE_PATH, filename)
             
             # Vi lagrer det ferdige bildet (med automatiske bokser)
             cv2.imwrite(filepath, annotated_frame)
 
-            print(f"Suksess, AI har merket bildet og lagret det i {SAVE_PATH}/{filename}")
-            return "OK - Funnet og merket", 200
+            print(f"DEBUG-MODUS: Lagret bilde uansett funn i {SAVE_PATH}/{filename}")
+            return "OK - Debug lagring utført", 200
         
         else:
             print("Ingen relevante objekter funnet. Forkaster bildet.")

@@ -1,36 +1,34 @@
-#lettvekt Python-base
+# Lettvekt Python-base
 FROM python:3.11-slim
 
-# Vi må ha med noen ekstra Linux-biblioteker for at OpenCV skal fungere i containeren
-# Vi kjører linje for linje for commands siden dette blir surr pga spesialtegn.
+# Vi kjører alt linje for linje for å unngå tegnfeil (spesialtegn)
 RUN apt-get update
-RUN apt-get install -y libgl1-mesa-glx
+RUN apt-get install -y libgl1
 RUN apt-get install -y libglib2.0-0
 RUN rm -rf /var/lib/apt/lists/*
 
-#arbeidsmappe i containeren
+# Arbeidsmappe i containeren
 WORKDIR /app
 
-#Flask som er nødvendig for scriptet og AI-motorene
-RUN pip install --no-cache-dir \
-    flask \
-    numpy \
-    opencv-python-headless \
-    ultralytics \
-    easyocr
+# Installerer Python-biblioteker en etter en for å unngå spesialtegn problem
+RUN pip install --no-cache-dir flask
+RUN pip install --no-cache-dir numpy
+RUN pip install --no-cache-dir opencv-python-headless
+RUN pip install --no-cache-dir ultralytics
+RUN pip install --no-cache-dir easyocr
 
-# "Pre-loading": Vi laster ned AI-modellene under bygging så Pi-en er klar til kamp
+# Last ned AI-modeller under bygging
 RUN python -c "from ultralytics import YOLO; YOLO('yolov8n.pt')"
 RUN python -c "import easyocr; easyocr.Reader(['en'])"
 
-#Kopierer selve scriptet inn i containeren
+# Kopierer scriptet
 COPY mottakerAvData.py .
 
-# Lager mappen for bildene dine inne i containeren (for bind mount til SSD)
+# Lager bilde-mappen for SSD-en
 RUN mkdir -p /bilder
 
-#Forteller Docker at vi bruker port 5000
+# Eksponerer port 5000
 EXPOSE 5000
 
-#Vi starter scriptet
+# Starter appen
 CMD ["python", "mottakerAvData.py"]

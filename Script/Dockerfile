@@ -2,10 +2,11 @@
 FROM python:3.11-slim
 
 # Vi må ha med noen ekstra Linux-biblioteker for at OpenCV skal fungere i containeren
-RUN apt-get update && apt-get install -y \
-    libgl1-mesa-glx \
-    libglib2.0-0 \
-    && rm -rf /var/lib/apt/lists/*
+# Vi kjører linje for linje for commands siden dette blir surr pga spesialtegn.
+RUN apt-get update
+RUN apt-get install -y libgl1-mesa-glx
+RUN apt-get install -y libglib2.0-0
+RUN rm -rf /var/lib/apt/lists/*
 
 #arbeidsmappe i containeren
 WORKDIR /app

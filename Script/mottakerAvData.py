@@ -25,12 +25,12 @@ if not os.path.exists(SAVE_PATH):
 
 #AI - modell oppstart på RAM ved oppstart på Pironman 5 16GB RAM - Raspberry pi 5
 print("Initialiserer 'hjernen' (YOLO + OCR)")
-model = YOLO("yolov8m.pt")
+model = YOLO("yolov8x.pt") #Laster ned XL-modellen for best accuracy
 reader = easyocr.Reader(['en'], gpu=False)
 print("Systemet er nå klart for objekt identifikasjon!")
 
 #Liste over objekter som skal trigge på lagring, dette er for test - hvor listen vil være mindre senere
-TARGET_OBJECTS = ["person","remote","cell phone","car", "truck", "laptop", "mouse"]
+TARGET_OBJECTS = ["person","remote","cell phone","car", "truck", "laptop"]
 
 @app.route('/upload-bilde', methods=['POST'])
 def upload():
@@ -46,7 +46,7 @@ def upload():
         img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
 
         # AI IDENTIFISERING (Automatisk)
-        results = model(img, verbose=False)
+        results = model(img, verbose=False, conf=0.7) #setter conf til 0.7 for å fjerne gjetting av støy i bildet.
         
         # Sjekk om vi fant noen 'TARGET_OBJECTS'
         found_interesting = False

@@ -10,8 +10,7 @@ RUN apt-get update && apt-get install -y \
 #arbeidsmappe i containeren
 WORKDIR /app
 
-#Flask som er nødvendig for scriptet
-# Her har jeg også lagt til AI-motorene (YOLO, EasyOCR og OpenCV)
+#Flask som er nødvendig for scriptet og AI-motorene
 RUN pip install --no-cache-dir \
     flask \
     numpy \
@@ -19,17 +18,17 @@ RUN pip install --no-cache-dir \
     ultralytics \
     easyocr
 
-# "Pre-loading": Vi laster ned AI-modellene under bygging så Pi-en er klar til kamp med en gang
+# "Pre-loading": Vi laster ned AI-modellene under bygging så Pi-en er klar til kamp
 RUN python -c "from ultralytics import YOLO; YOLO('yolov8n.pt')"
 RUN python -c "import easyocr; easyocr.Reader(['en'])"
 
-#Kopierer selve scriptet inn i containeren - sånn at det funker 24/7
+#Kopierer selve scriptet inn i containeren
 COPY mottakerAvData.py .
 
-# Lager mappen for bildene dine inne i containeren
+# Lager mappen for bildene dine inne i containeren (for bind mount til SSD)
 RUN mkdir -p /bilder
 
-#Forteller Docker at vi bruker port 5000 slik at den mottar
+#Forteller Docker at vi bruker port 5000
 EXPOSE 5000
 
 #Vi starter scriptet

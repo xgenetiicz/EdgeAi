@@ -25,7 +25,7 @@ if not os.path.exists(SAVE_PATH):
 
 #AI - modell oppstart på RAM ved oppstart på Pironman 5 16GB RAM - Raspberry pi 5
 print("Initialiserer 'hjernen' (YOLO + OCR)")
-model = YOLO("yolov8n.pt")
+model = YOLO("yolov8m.pt")
 reader = easyocr.Reader(['en'], gpu=False)
 print("Systemet er nå klart for objekt identifikasjon!")
 
@@ -68,7 +68,7 @@ def upload():
             if any(model.names[int(b.cls[0])] in ["car", "truck"] for b in results[0].boxes):
                 ocr_result = reader.readtext(img)
                 for (_, text, prob) in ocr_result:
-                    if len(text) >= 5 and prob > 0.5: #Skal registrere skilt der den er mer enn 50% sikker.
+                    if len(text) >= 5 and prob > 0.85: #Skal registrere skilt der den er mer enn 85% sikker.
                         # Skriver skiltet nederst i hjørnet på det ferdige bildet
                         cv2.putText(annotated_frame, f"SKILT: {text.upper()}", (20, 40), 
                                     cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 3)

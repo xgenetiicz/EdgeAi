@@ -18,7 +18,7 @@ RUN pip install --no-cache-dir ultralytics
 RUN pip install --no-cache-dir easyocr
 
 # Last ned AI-modeller under bygging
-RUN python -c "from ultralytics import YOLO; YOLO('yolov8x.pt')"
+RUN python -c "from ultralytics import YOLO; YOLO('yolov8v.pt')"
 RUN python -c "import easyocr; easyocr.Reader(['en'])"
 
 # Kopierer scriptet

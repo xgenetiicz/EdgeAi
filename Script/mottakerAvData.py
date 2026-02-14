@@ -25,7 +25,7 @@ if not os.path.exists(SAVE_PATH):
 
 #AI - modell oppstart på RAM ved oppstart på Pironman 5 16GB RAM - Raspberry pi 5
 print("Initialiserer 'hjernen' (YOLO + OCR)")
-model = YOLO("yolov8l.pt") #Laster ned L-modellen for best accuracy
+model = YOLO("yolov8m.pt") #Laster ned M-modellen for best accuracy
 reader = easyocr.Reader(['en'], gpu=False)
 print("Systemet er nå klart for objekt identifikasjon!")
 

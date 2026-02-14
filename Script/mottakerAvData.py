@@ -46,8 +46,8 @@ def upload():
         img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
 
         # AI IDENTIFISERING (Automatisk)
-        # VIKTIG: Satt ned til 0.01 for å feilsøke bildekvalitet
-        results = model(img, verbose=False, conf=0.01) 
+        # VIKTIG: Satt ned til 0.05 for å feilsøke bildekvalitet
+        results = model(img, verbose=False, conf=0.05) 
         
         # Sjekk om vi fant noen 'TARGET_OBJECTS'
         found_interesting = False

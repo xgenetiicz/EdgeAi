@@ -25,7 +25,7 @@ for path in [TRAIN_PATH, DETECTION_PATH, CAR_PATH]:
 
 # AI - modell oppstart på RAM ved oppstart på Raspberry pi 5
 print("Initialiserer 'hjernen' (YOLO + OCR)", flush=True)
-model = YOLO("yolov8m.pt") # Laster ned M-modellen for best accuracy og fart
+model = YOLO("yolov8x.pt") # Laster ned XL-modellen for best accuracy og fart
 reader = easyocr.Reader(['en'], gpu=False)
 print("Systemet er nå klart for objekt identifikasjon!", flush=True)
 

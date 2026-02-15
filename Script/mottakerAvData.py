@@ -47,7 +47,7 @@ def upload():
 
         # AI IDENTIFISERING (Automatisk)
         # VIKTIG: Satt ned til 0.07 for å feilsøke bildekvalitet
-        results = model(img, verbose=False, conf=0.07) 
+        results = model(img, verbose=False, conf=0.7) 
         
         # Sjekk om vi fant noen 'TARGET_OBJECTS'
         found_interesting = False

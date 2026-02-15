@@ -57,9 +57,9 @@ def upload():
         # 1. LAGRE RÅ-BILDE (Dette lagres uansett for Edge Impulse)
         cv2.imwrite(os.path.join(TRAIN_PATH, f"raw_{timestamp}.jpg"), img)
 
-        # 2. AI IDENTIFISERING (Bruker konfidens på 0.5 som forespurt)
-        print(f"Kjører YOLOv8m-analyse (conf=0.5)...", flush=True)
-        results = model(img, verbose=False, conf=0.5) 
+        # 2. AI IDENTIFISERING (Bruker konfidens på 0.2 som forespurt)
+        print(f"Kjører YOLOv8m-analyse (conf=0.2)...", flush=True)
+        results = model(img, verbose=False, conf=0.2) 
         
         # Sjekker hvilke objekter vi fant
         found_names = [model.names[int(b.cls[0])] for r in results for b in r.boxes]

@@ -58,10 +58,10 @@ def upload():
 
         # AI IDENTIFISERING (Automatisk)
         # Bruker konfidens på 0.7 for å sikre nøyaktige treff i produksjon
-        results = model(img, verbose=False, conf=0.7) 
+        results = model(img, verbose=False, conf=0.5) 
         
         # Sjekk om vi faktisk fant noe fra TARGET_OBJECTS
-        found_names = [model.names[int(b.cls[0])] for r in results for b in r.boxes]
+        found_names = [model.names[int(b.cls[0])] for r in reSsults for b in r.boxes]
         is_vehicle = any(name in ["car", "truck"] for name in found_names)
         found_interesting = any(name in TARGET_OBJECTS for name in found_names)
         

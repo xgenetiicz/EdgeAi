@@ -29,8 +29,8 @@ model = YOLO("yolov8m.pt") # Laster ned M-modellen for best accuracy og fart
 reader = easyocr.Reader(['en'], gpu=False)
 print("Systemet er nå klart for objekt identifikasjon!", flush=True)
 
-# Liste over objekter som skal trigge på lagring
-TARGET_OBJECTS = ["person", "cell phone", "car", "truck", "laptop"]
+# Liste over objekter som skal trigge på lagring - LAGT TIL 'remote' FOR TEST
+TARGET_OBJECTS = ["person", "remote", "cell phone", "car", "truck", "laptop"]
 # Henter ID-er slik at plot() bare tegner det vi vil se
 TARGET_IDS = [id for id, name in model.names.items() if name in TARGET_OBJECTS]
 
@@ -54,27 +54,41 @@ def upload():
 
         timestamp = int(time.time())
         
-        # 1. LAGRE RÅ-BILDE (Dette lagres uansett for Edge Impulse)
+        # LAGRE RÅ-BILDE (Dette lagres uansett for Edge Impulse)
         cv2.imwrite(os.path.join(TRAIN_PATH, f"raw_{timestamp}.jpg"), img)
 
-        # 2. AI IDENTIFISERING (Bruker konfidens på 0.2 som forespurt)
-        print(f"Kjører YOLOv8m-analyse (conf=0.2)...", flush=True)
-        results = model(img, verbose=False, conf=0.2) 
+        # AI IDENTIFISERING (Satt til 0.2 for å fange opp objekter i dårlig lys)
+        valgt_conf = 0.2
+        print(f"Kjører YOLOv8m-analyse (conf={valgt_conf})...", flush=True)
+        results = model(img, verbose=False, conf=valgt_conf) 
         
-        # Sjekker hvilke objekter vi fant
-        found_names = [model.names[int(b.cls[0])] for r in results for b in r.boxes]
-        is_vehicle = any(name in ["car", "truck"] for name in found_names)
+        # Henter ut navn og konfidens for ALT AI-en ser for bedre debugging
+        detections = []
+        for r in results:
+            for box in r.boxes:
+                name = model.names[int(box.cls[0])]
+                conf = float(box.conf[0])
+                detections.append(f"{name} ({conf:.2f})")
         
-        # Sjekk om vi fant noen 'TARGET_OBJECTS'
-        if any(name in TARGET_OBJECTS for name in found_names):
-            print(f"Treff funnet: {found_names}. Starter bildebehandling.", flush=True)
+        if detections:
+            print(f"AI-en ser: {', '.join(detections)}", flush=True)
+        else:
+            print("AI-en ser absolutt ingen objekter.", flush=True)
+
+        # Finn ut om noen av de detekterte objektene er i TARGET_OBJECTS
+        found_targets = [d.split(' ')[0] for d in detections if d.split(' ')[0] in TARGET_OBJECTS]
+        is_vehicle = any(v in found_targets for v in ["car", "truck"])
+        
+        # LAGRE DETEKSJON (Hvis vi fant et mål-objekt)
+        if found_targets:
+            print(f"TREFF: Fant {found_targets}. Starter bildebehandling.", flush=True)
             
             # .plot() tegner bokser og navn KUN for dine objekter
             annotated_frame = results[0].plot(classes=TARGET_IDS) 
             
             # --- EKSTRA FOR BILSKILT ---
             if is_vehicle:
-                print("Starter EasyOCR skiltlesing...", flush=True)
+                print("Kjøretøy funnet. Starter EasyOCR...", flush=True)
                 ocr_result = reader.readtext(img)
                 for (_, text, prob) in ocr_result:
                     if len(text) >= 5 and prob > 0.85:
@@ -89,7 +103,7 @@ def upload():
             print(f"Lagret deteksjon i: {save_path}", flush=True)
         
         else:
-            print("Ingen relevante objekter over terskelen på 0.5 funnet.", flush=True)
+            print(f"Ingen av objektene ({detections}) var i TARGET_OBJECTS over {valgt_conf}.", flush=True)
 
         proc_time = time.time() - start_time
         print(f"Total tid brukt: {proc_time:.2f} sekunder.", flush=True)

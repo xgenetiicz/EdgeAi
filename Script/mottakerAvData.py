@@ -16,7 +16,7 @@ TRAIN_PATH = os.path.join(BASE_PATH, "edge_impulse")
 # Mappe for ferdige deteksjoner med bokser
 DETECTION_PATH = os.path.join(BASE_PATH, "deteksjoner")
 # Spesifikk undermappe for bil-testene
-CAR_PATH = os.path.join(DETECTION_PATH, "bil")
+CAR_PATH = os.path.join(BASE_PATH, "bil")
 
 # Sikrer at alle mapper eksisterer på SSD før vi starter
 for path in [TRAIN_PATH, DETECTION_PATH, CAR_PATH]:
@@ -31,7 +31,7 @@ print("Systemet er nå klart for objekt identifikasjon!")
 
 # Liste over objekter som skal trigge på lagring. 
 # KUN disse vil bli tegnet på bildet og lagret i deteksjons-mappene.
-TARGET_OBJECTS = ["person", "cell phone", "car", "truck", "laptop"]
+TARGET_OBJECTS = ["person", "cell phone", "car", "truck", "laptop","remote"]
 
 # Henter ID-ene til objektene automatisk for å filtrere bort irrelevante funn (som bananer/toalett)
 TARGET_IDS = [id for id, name in model.names.items() if name in TARGET_OBJECTS]

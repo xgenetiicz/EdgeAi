@@ -13,7 +13,7 @@ app = Flask(__name__)
 # --- RIKTIG_PATH FOR SSD ---
 # /media/genetiicz/storage/bil/bilder:/bilder 
 BASE_PATH = "/bilder"
-TRAIN_PATH = os.path.join(BASE_PATH, "edge_impulse") # Rå-bilder for læring
+TRAIN_PATH = os.path.join(BASE_PATH, "roboflow") # Rå-bilder for læring
 DETECTION_PATH = os.path.join(BASE_PATH, "deteksjoner") # Ferdige bilder
 CAR_PATH = os.path.join(BASE_PATH, "bil") # Spesifikk for bil-test
 LOG_FILE = os.path.join(BASE_PATH, "error_log.txt") # Her lagres 500-feilmeldingen

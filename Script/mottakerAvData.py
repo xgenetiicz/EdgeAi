@@ -57,8 +57,8 @@ def upload():
         cv2.imwrite(os.path.join(TRAIN_PATH, f"raw_{timestamp}.jpg"), img)
 
         # AI IDENTIFISERING 
-        # Setter den på 0.7 for å få deteksjoner som kan brukes til ekperimentering, kan tas ned ved behov.
-        valgt_conf = 0.7
+        # Setter den på 0.5 for å få deteksjoner som kan brukes til ekperimentering, kan tas ned ved behov.
+        valgt_conf = 0.5
         results = model(img, verbose=False, conf=valgt_conf) 
         
         # Henter ut informasjon for logging og sjekking

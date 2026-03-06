@@ -25,12 +25,13 @@ for path in [TRAIN_PATH, DETECTION_PATH, CAR_PATH]:
 
 # AI - modell oppstart på RAM ved oppstart på Raspberry pi 5
 print("Initialiserer 'hjernen' (YOLO + OCR)", flush=True)
-model = YOLO("yolov8x.pt") # Laster ned XL-modellen for best accuracy og fart
+# Vi bruker 'modeller/best.pt' for å matche volum-mappingen i docker-compose
+model = YOLO("modeller/best.pt") # Bruker den trenede modellen som ligger i samme mappe. Sørg for at "best.pt" er der før oppstart.
 reader = easyocr.Reader(['en'], gpu=False)
 print("Systemet er nå klart for objekt identifikasjon!", flush=True)
 
 # Liste over objekter som skal trigge på lagring
-TARGET_OBJECTS = ["person", "remote", "cell phone", "car", "truck", "laptop"]
+TARGET_OBJECTS = ["car", "license plate"] # Vi inkluderer "license plate" for å fange opp skilt også
 
 @app.route('/upload-bilde', methods=['POST'])
 def upload():
@@ -52,10 +53,11 @@ def upload():
 
         timestamp = int(time.time())
         
-        # 1. LAGRE RÅ-BILDE (Dette lagres uansett for Edge Impulse)
+        # LAGRE RÅ-BILDE 
         cv2.imwrite(os.path.join(TRAIN_PATH, f"raw_{timestamp}.jpg"), img)
 
-        # 2. AI IDENTIFISERING (Satt til 0.2 for å fange opp objekter i dårlig lys)
+        # AI IDENTIFISERING 
+        # Setter den på 0.7 for å få deteksjoner som kan brukes til ekperimentering, kan tas ned ved behov.
         valgt_conf = 0.7
         results = model(img, verbose=False, conf=valgt_conf) 
         
@@ -78,7 +80,7 @@ def upload():
         else:
             print("AI-en ser absolutt ingen objekter.", flush=True)
 
-        # 3. LAGRE DETEKSJON (Hvis vi fant et mål-objekt)
+        # LAGRE DETEKSJON (Hvis vi fant et mål-objekt)
         if found_targets:
             # Vi fjerner duplikater i loggen for ryddighet
             unique_targets = list(set(found_targets))
@@ -87,8 +89,8 @@ def upload():
             # .plot() tegner bokser. Vi bruker standardinstillingen for å unngå versjonsfeil.
             annotated_frame = results[0].plot() 
             
-            # Sjekk om vi skal lagre i bil-mappen
-            is_vehicle = any(v in found_targets for v in ["car", "truck"])
+            # Sjekk om vi skal lagre i bil-mappen (Lagt til 'license plate' her for å trigge OCR)
+            is_vehicle = any(v in found_targets for v in ["car","license plate"])
             
             # --- EKSTRA FOR BILSKILT ---
             if is_vehicle:

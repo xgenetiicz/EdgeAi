@@ -86,5 +86,7 @@ services:
     volumes:
       # Nå ser begge containerne samme mappe via /bilder
       - /media/genetiicz/storage/bil/bilder:/bilder 
+      # Dette er her vi mapper den nye ai - modellen vi har trent, slik at den kan brukes i image-processor containeren.
+      - /media/genetiicz/storage/bil/modeller:/app/modeller
     environment:
       - TZ=Europe/Oslo

@@ -47,4 +47,6 @@ Her finner dere detaljert dokumentasjon for de ulike fasene og komponentene i **
 * **[01 - Systemarkitektur og Infrastruktur](./Docs/01-Systemarkitektur.md):** Beskrivelse av maskinvare (Pi 5, NVMe), Docker-oppsett og sikkerhet.
 * **[02 - Dataflyt og Backend](./Docs/02-Dataflyt-og-Backend.md):** Dokumentasjon av Base64-overføring, Flask-mottaker og lagringslogikk.
 * **[03 - Edge-enhet](./Docs/03-Edge-enhet.md):** Teknisk oppsett av ESP32-CAM, kamerasensor og lokal lagring.
-* **[04 - Edge & Server](./Docs/04-Edge-og-Server.md):** Detaljer rundt Node-RED, API-oppslag mot Statens Vegvesen og "DeepFind"-algoritmen.
+* **[05 - Sikker og Lokasjonsuavhengig IoT-Arkitektur](./Docs/05-Lokal-til-https.md):** Implementering av Cloudflare Tunnel og HTTPS.
+* **[06 - Object Identification & AI Inference](./Docs/06-Object-Identification.md):** Gjennomgang av YOLOv8-modellvalg (XL), EasyOCR og bilde-annotering.
+* **[07 - Roboflow, AI-trening og AMD Optimalisering](./Docs/07-Roboflow-AI-Training.md):** Dokumentasjon av trening på Linux/ROCm, auto-labeling med Gemini og treningsresultater - resultat er YOlOv8m modell - med eget trent datasett.

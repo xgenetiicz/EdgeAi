@@ -13,7 +13,9 @@ WORKDIR /app
 # Installerer Python-biblioteker en etter en for å unngå spesialtegn problem
 RUN pip install --no-cache-dir flask
 RUN pip install --no-cache-dir numpy
-RUN pip install --no-cache-dir opencv-python-headless
+
+#opencv er nøkkelen for rtsp streaming.
+RUN pip install --no-cache-dir opencv-python-headless  
 RUN pip install --no-cache-dir ultralytics
 RUN pip install --no-cache-dir easyocr
 

@@ -24,14 +24,14 @@ for path in [TRAIN_PATH, DETECTION_PATH, CAR_PATH]:
         os.makedirs(path)
 
 # AI - modell oppstart på RAM ved oppstart på Raspberry pi 5
-print("Initialiserer 'hjernen' (YOLO + OCR)", flush=True)
+print("Initialiserer 'hjernen' (YOLOv8 + OCR)", flush=True)
 # Vi bruker 'modeller/best.pt' for å matche volum-mappingen i docker-compose
 model = YOLO("modeller/best.pt") # Bruker den trenede modellen som ligger i samme mappe. Sørg for at "best.pt" er der før oppstart.
 reader = easyocr.Reader(['en'], gpu=False)
-print("Systemet er nå klart for objekt identifikasjon!", flush=True)
+print("Systemet er nå klart for identifisere skilt.", flush=True)
 
 # Liste over objekter som skal trigge på lagring
-TARGET_OBJECTS = ["car", "license plate"] # Vi inkluderer "license plate" for å fange opp skilt også
+TARGET_OBJECTS = ["car", "license plate"] # "license plate" er nøkkelen for oppgaven - den skal trigger ocr lesingen (ikke bilen).
 
 @app.route('/upload-bilde', methods=['POST'])
 def upload():

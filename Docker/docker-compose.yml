@@ -90,3 +90,6 @@ services:
       - /media/genetiicz/storage/bil/modeller:/app/modeller
     environment:
       - TZ=Europe/Oslo
+      # .env variabler for rtsp - stream.
+      - RTSP_PORT=${RTSP_PORT}
+      - RTSP_STREAM_URL=${RTSP_STREAM_URL}

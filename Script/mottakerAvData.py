@@ -1,5 +1,3 @@
-from flask import Flask, request # Flask må ha stor F for å virke
-import base64 # dekoder bilder i tekst
 import os
 import time
 import cv2 # for tegning og bildebehandling slik at vi viser visuelt hva som blir identifisert!
@@ -8,7 +6,13 @@ from ultralytics import YOLO # AI - motoren som gjør Object identifisering
 import easyocr # Skiltleseren
 import traceback # Henter ut nøyaktig feilmelding ved krasj
 
-app = Flask(__name__)
+RTSP_PORT = os.getenv("RTSP_PORT") # Porten for RTSP-strømmen, legger frem her for forståelse av at dette ligger i .env
+RTSP_STREAM_BASE = os.getenv("RTSP_STREAM_URL") 
+RTSP_STREAM_URL = f"{RTSP_STREAM_BASE}:{RTSP_PORT}/bil" # RTSP URL for streaming med porten fra .env.
+
+#Har satt opp Tailscale der rasperry pi 4 og pi 5 snakker sammen og bruker Tailscale IP-adresser for å kommunisere. Dette gjør at vi kan sende bilder fra pi 4 til pi 5
+# uten å bekymre oss for nettverkskonfigurasjon, 
+# og det gir en stabil og sikker forbindelse mellom enhetene, dette er for å unngå ulike subnett og slikt.
 
 # --- RIKTIG_PATH FOR SSD ---
 # /media/genetiicz/storage/bil/bilder:/bilder 
@@ -26,104 +30,131 @@ for path in [TRAIN_PATH, DETECTION_PATH, CAR_PATH]:
 # AI - modell oppstart på RAM ved oppstart på Raspberry pi 5
 print("Initialiserer 'hjernen' (YOLOv8 + OCR)", flush=True)
 # Vi bruker 'modeller/best.pt' for å matche volum-mappingen i docker-compose
-model = YOLO("modeller/best.pt") # Bruker den trenede modellen som ligger i samme mappe. Sørg for at "best.pt" er der før oppstart.
+model = YOLO("modeller/best.pt") # Bruker den trenede modellen som ligger i samme mappe. Sørg for at "best.pt" er der før oppstart. skal ligge på /media/genetiicz/pathtossd/modeller/best.pt
 reader = easyocr.Reader(['en'], gpu=False)
-print("Systemet er nå klart for identifisere skilt.", flush=True)
+print("Systemet er nå klart for å identifisere skilt.", flush=True)
 
 # Liste over objekter som skal trigge på lagring
 TARGET_OBJECTS = ["car", "license plate"] # "license plate" er nøkkelen for oppgaven - den skal trigger ocr lesingen (ikke bilen).
 
-@app.route('/upload-bilde', methods=['POST'])
-def upload():
-    # Tidspunkt for å logge prosesseringstid
-    start_time = time.time()
-    print(f"\n--- [{time.strftime('%H:%M:%S')}] Forespørsel mottatt ---", flush=True)
+#vi setter variabler for oppførsel slik at kameraet ikke analyserer 60 bilder i sekundet -  bare når klassene dukker opp.
+frame_counter = 0 
+ocr_count = 0
+
+#Vi lager en Videocapture objekt for å hente RTSP-strømmen fra pi 4, 
+#og vi bruker OpenCV for å håndtere videostrømmen.
+cap = cv2.VideoCapture(RTSP_STREAM_URL)
+
+#Hvis den ikke funker
+if not cap.isOpened():
+    print(f"Feil: Klarte ikke å hente ut RTSP-strømmen fra {RTSP_STREAM_URL}.\nSjekk loggene i stacken på portainer på pi 4 for detaljer.", flush=True)
     
-    try:
-        # hente ut tekstrengen til base64 og dekode til bilde-bytes
-        base64_data = request.data.decode('utf-8')
-        image_bytes = base64.b64decode(base64_data)
+    #Vi fortsetter som videre hvis det funker -> neste er logikk for å hente bilder og sende til yolov8 modellen.
+else:
+    print(f"RTSP-strømmen fungerer, henter video fra {RTSP_STREAM_URL}", flush=True)
 
-        # Konverterer bytes til bildeformat som AI kan lese
-        nparr = np.frombuffer(image_bytes, np.uint8)
-        img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+#Må sette en uendelig løkke slik at scriptet holder seg i live for å gjøre bildelogikken.
+try:
+    while True:
+        ret, frame = cap.read()
 
-        if img is None:
-            raise ValueError("Bilde-dekoding feilet (NoneType). Sjekk om dataen er korrupt.")
+        frame_counter += 1
 
-        timestamp = int(time.time())
-        
-        # LAGRE RÅ-BILDE 
-        cv2.imwrite(os.path.join(TRAIN_PATH, f"raw_{timestamp}.jpg"), img)
+        if not ret:
+            print("Mistet forbindelsen til rtsp - strømmen, prøver å gjennoprette streamen om 5 sekunder.", flush=True)
+            time.sleep(5)
+            cap = cv2.VideoCapture(RTSP_STREAM_URL)
+            continue
 
-        # AI IDENTIFISERING 
-        # Setter den på 0.5 for å få deteksjoner som kan brukes til ekperimentering, kan tas ned ved behov.
-        valgt_conf = 0.5
-        results = model(img, verbose=False, conf=valgt_conf) 
-        
-        # Henter ut informasjon for logging og sjekking
-        detections_for_log = []
-        found_targets = []
-        
-        for r in results:
-            for box in r.boxes:
-                name = model.names[int(box.cls[0])] # Henter hele navnet, f.eks "cell phone"
-                conf = float(box.conf[0])
-                detections_for_log.append(f"{name} ({conf:.2f})")
+        #Vi sjekker ai for hvert 10 bilde siden dette er 60 fps. 
+        if frame_counter % 6 == 0:
+
+            #vi identifiserer hva modellen fant
+            results = model(frame, verbose=False, conf=0.7) 
+            annotated_frame = results[0].plot() #Tegner bb automatisk 
+
+            found_classes = set()
+            car_box = None
+            plate_box = None
+
+            for r in results:
+                for box in r.boxes:
+                    name = model.names[int(box.cls[0])] 
+                    found_classes.add(name)
+
+                    #Lagre koordinator hvis klassene blir funnet:
+                    if name == "car":
+                        car_box = box.xyxy[0].tolist()
+                    elif name == "license plate":
+                        plate_box = box.xyxy[0].tolist()
+            
+            timestamp = int(time.time())
+
+            # Sjekker om vi fant bil eller skilt
+            if any(obj in TARGET_OBJECTS for obj in found_classes):
                 
-                # Sjekker om objektet er i listen vår (uten å splitte navnet)
-                if name in TARGET_OBJECTS:
-                    found_targets.append(name)
-        
-        if detections_for_log:
-            print(f"AI-en ser: {', '.join(detections_for_log)}", flush=True)
-        else:
-            print("AI-en ser absolutt ingen objekter.", flush=True)
+                image_to_read = None
+                
+                # LOGIKK: Klipp ut (crop) det vi fant før vi sender det til EasyOCR
+                if plate_box:
+                    # AI fant skiltet! Vi klipper ut bare skiltet.
+                    x1, y1, x2, y2 = map(int, plate_box)
+                    image_to_read = frame[y1:y2, x1:x2]
+                    print(f"[{time.strftime('%H:%M:%S')}] Skilt detektert! Skanner skiltet ->", flush=True)
 
-        # LAGRE DETEKSJON (Hvis vi fant et mål-objekt)
-        if found_targets:
-            # Vi fjerner duplikater i loggen for ryddighet
-            unique_targets = list(set(found_targets))
-            print(f"TREFF: Fant {unique_targets}. Starter bildebehandling.", flush=True)
-            
-            # .plot() tegner bokser. Vi bruker standardinstillingen for å unngå versjonsfeil.
-            annotated_frame = results[0].plot() 
-            
-            # Sjekk om vi skal lagre i bil-mappen (Lagt til 'license plate' her for å trigge OCR)
-            is_vehicle = any(v in found_targets for v in ["car","license plate"])
-            
-            # --- EKSTRA FOR BILSKILT ---
-            if is_vehicle:
-                print("Kjøretøy funnet. Starter EasyOCR...", flush=True)
-                ocr_result = reader.readtext(img)
+                elif car_box:
+                    # AI fant bare bilen. Vi klipper ut bilen og leter etter tekst på den.
+                    x1, y1, x2, y2 = map(int, car_box)
+                    image_to_read = frame[y1:y2, x1:x2]
+                    print(f"[{time.strftime('%H:%M:%S')}] Bil detektert! Skanner bilen for skilt ->", flush=True)
+
+                # Kjører EasyOCR BARE på det utklipte bildet - dette er for å spare
+                if image_to_read is not None and image_to_read.size > 0:
+                    ocr_result = reader.readtext(image_to_read)
+                else:
+                    ocr_result = []
+
+                skilt_lest = False
+                
                 for (_, text, prob) in ocr_result:
-                    if len(text) >= 5 and prob > 0.85:
-                        cv2.putText(annotated_frame, f"SKILT: {text.upper()}", (20, 40), 
-                                    cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 3)
-                save_path = os.path.join(CAR_PATH, f"bil_{timestamp}.jpg")
-            else:
-                save_path = os.path.join(DETECTION_PATH, f"deteksjon_{timestamp}.jpg")
-
-            # Lagre det ferdige bildet
-            cv2.imwrite(save_path, annotated_frame)
-            print(f"Lagret deteksjon i: {save_path}", flush=True)
-        
-        else:
-            print(f"Ingen av objektene ({detections_for_log}) var i TARGET_OBJECTS.", flush=True)
-
-        proc_time = time.time() - start_time
-        print(f"Total tid brukt: {proc_time:.2f} sekunder.", flush=True)
-        return "OK", 200
-
-    except Exception as e:
-        # Fanger hele feilmeldingen og skriver den til SSD-en
-        error_msg = traceback.format_exc()
-        print(f"!!! KRASJ I SCRIPTET !!!\n{error_msg}", flush=True)
-        
-        with open(LOG_FILE, "a") as f:
-            f.write(f"\n--- [{time.strftime('%Y-%m-%d %H:%M:%S')}] ---\n{error_msg}\n")
+                    if len(text) >= 5 and prob > 0.85: 
+                        plate_text = text.replace(" ", "").upper()
+                        cv2.putText(annotated_frame, f"SKILT: {plate_text}", (20, 40), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 3)
+                        
+                        #plate_text lagrer filen med riktig skiltnummer til bilen slik at vi har riktig bilde med riktig skiltnummer
+                        save_path = os.path.join(CAR_PATH, f"{plate_text}_{timestamp}.jpg")
+                        cv2.imwrite(save_path, annotated_frame)
+                        print(f"SUKSESS! Leste skilt: {plate_text}.", flush=True)
+                        
+                        skilt_lest = True
+                        ocr_count = 0 
+                        time.sleep(3) # Cooldown så vi ikke tar flere bilder av samme bil
+                        break 
+                
+                # Hvis AI så bil, men OCR ikke klarte å lese teksten
+                if not skilt_lest:
+                    ocr_count += 1
+                    print(f"Klarte ikke lese skilt godt nok. Forsøk {ocr_count}/5", flush=True)
+                    
+                    if ocr_count >= 5:
+                        print("FEIL: Bil oppdaget 5 ganger på rad, men helt umulig å lese skiltet tydelig.", flush=True)
+                        save_path = os.path.join(DETECTION_PATH, f"feilet_lesing_{timestamp}.jpg")
+                        cv2.imwrite(save_path, annotated_frame)
+                        ocr_count = 0 
+                        time.sleep(3) # Cooldown før vi leter etter neste bil
             
-        return "Internal Server Error", 500
+            # Rydder opp telleren hvis bilen forsvinner
+            else:
+                ocr_count = 0
 
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+except KeyboardInterrupt:
+    print("Scriptet ble stoppet manuelt.")
+except Exception as e:
+    error_msg = traceback.format_exc()
+    print(f"SCRIPTET HAR KRÆSJET HELT, SJEKK EXCEPTION!!\n{error_msg}", flush=True)
+    with open(LOG_FILE, "a") as f:
+        f.write(f"\n--- [{time.strftime('%Y-%m-%d %H:%M:%S')}] ---\n{error_msg}\n")
+finally:
+    # Rydder opp strømmen ordentlig når scriptet krasjer/lukkes
+    cap.release()
+    cv2.destroyAllWindows()

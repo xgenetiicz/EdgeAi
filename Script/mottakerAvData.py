@@ -5,6 +5,7 @@ import numpy as np # Dette er for bildematriser
 from ultralytics import YOLO # AI - motoren som gjør Object identifisering
 import easyocr # Skiltleseren
 import traceback # Henter ut nøyaktig feilmelding ved krasj
+import re # NYTT: Importerer regex for å fiske ut norske skilt fra tekststøyen
 
 RTSP_PORT = os.getenv("RTSP_PORT") # Porten for RTSP-strømmen, legger frem her for forståelse av at dette ligger i .env
 RTSP_STREAM_BASE = os.getenv("RTSP_STREAM_URL") 
@@ -99,6 +100,14 @@ try:
                 if plate_box:
                     # AI fant skiltet! Vi klipper ut bare skiltet.
                     x1, y1, x2, y2 = map(int, plate_box)
+                    
+                    # NY LOGIKK: Legg til padding (luft) rundt skiltet for at OCR skal klare å lese grensene
+                    pad = 15
+                    x1 = max(0, x1 - pad)
+                    y1 = max(0, y1 - pad)
+                    x2 = min(frame.shape[1], x2 + pad)
+                    y2 = min(frame.shape[0], y2 + pad)
+                    
                     image_to_read = frame[y1:y2, x1:x2]
                     print(f"[{time.strftime('%H:%M:%S')}] Skilt detektert! Skanner skiltet ->", flush=True)
 
@@ -110,15 +119,24 @@ try:
 
                 # Kjører EasyOCR BARE på det utklipte bildet - dette er for å spare
                 if image_to_read is not None and image_to_read.size > 0:
-                    ocr_result = reader.readtext(image_to_read)
+                    # NY LOGIKK: allowlist tvinger EasyOCR til å bare gjette på STUB og TALL, ikke flagg og småbokstaver
+                    ocr_result = reader.readtext(image_to_read, allowlist='0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ')
                 else:
                     ocr_result = []
 
                 skilt_lest = False
                 
-                for (_, text, prob) in ocr_result:
-                    if len(text) >= 5 and prob > 0.85: 
-                        plate_text = text.replace(" ", "").upper()
+                # vi må endre logikk slik at easyocr forstår hvordan den skal lese skiltet
+                if ocr_result:
+                    # Noen ganger leser OCR skiltet i to deler (f.eks "SU" og "92254"). 
+                    # Her slår vi sammen all tekst den fant i bildet til en streng.
+                    samlet_tekst = "".join([text for (_, text, prob) in ocr_result]).replace(" ", "").upper()
+                    
+                    # Regex leter etter nøyaktig 2 bokstaver og 5 tall i den samlede teksten.
+                    match = re.search(r'[A-Z]{2}[0-9]{5}', samlet_tekst) # denne er superviktig.
+                    
+                    if match:
+                        plate_text = match.group(0) # Dette blir det rene, norske skiltnummeret
                         cv2.putText(annotated_frame, f"SKILT: {plate_text}", (20, 40), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 3)
                         
                         #plate_text lagrer filen med riktig skiltnummer til bilen slik at vi har riktig bilde med riktig skiltnummer
@@ -129,7 +147,6 @@ try:
                         skilt_lest = True
                         ocr_count = 0 
                         time.sleep(3) # Cooldown så vi ikke tar flere bilder av samme bil
-                        break 
                 
                 # Hvis AI så bil, men OCR ikke klarte å lese teksten
                 if not skilt_lest:

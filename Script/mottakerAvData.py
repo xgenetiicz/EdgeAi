@@ -130,13 +130,19 @@ try:
 
                     #fjerner alt som ikker er beksvart skrift. en gråskala kan inneholde 256 nyanser av grått - og NO ønske vi å gjøre det helt hvitt med bakgrunnen fordi det
                     # det skaper støy til nå.
-                    _, binary_image = cv2.threshold(gray, 100, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
+                    #_, binary_image = cv2.threshold(gray, 100, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
                     
                     binary_image = cv2.adaptiveThreshold(gray, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 11, 2)
 
+                    #basert på bildet fra debug i deteksjoner så viste det at tallene har hull i seg og ikke er helt svarte
+                    #så vi fyller dem opp.
+                    inverted = cv2.bitwise_not(binary_image)
+                    kernel = np.ones((3, 3), np.uint8)
+                    dilated = cv2.dilate(inverted,kernel, iterations=1)
+                    final_image = cv2.bitwise_not(dilated)
                     #lagring
-                    debug_path = os.path.join(DETECTION_PATH, f"debug_ocr_{timestamp}.jpg")
-                    cv2.imwrite(debug_path, binary_image)
+                    debug_path = os.path.join(DETECTION_PATH, f"debug_clean_{timestamp}.jpg")
+                    cv2.imwrite(debug_path, final_image)
 
 
                     #Tesseract config:
@@ -146,7 +152,7 @@ try:
                     tesseract_config= r'--oem 3 --psm 7 -c tessedit_char_whitelist=0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 
                     # vi forteller at resultatet skal inneholde config linjen med allowlist.
-                    ocr_text =pytesseract.image_to_string(binary_image, config=tesseract_config)
+                    ocr_text =pytesseract.image_to_string(final_image, config=tesseract_config)
                 else:
                     ocr_text= ""
 
@@ -158,7 +164,7 @@ try:
                     # Her slår vi sammen all tekst den fant i bildet til en streng.
                     samlet_tekst = ocr_text.replace(" ", "").replace("\n", "").upper()
                     
-                    # Er nødt til å se hva easyOCR gjetter skiltnummeret siden den bommer hver gang.
+                    # Er nødt til å se hva OCR gjetter skiltnummeret siden den bommer hver gang.
                     print(f"LESING: Tesseract leser skiltnr som: '{samlet_tekst}' ", flush=True)
                     
                     # Regex leter etter nøyaktig 2 bokstaver og 5 tall i den samlede teksten.

@@ -121,16 +121,21 @@ try:
                 # Kjører EasyOCR BARE på det utklipte bildet - dette er for å spare
                 if image_to_read is not None and image_to_read.size > 0:
 
+                    #Testing with convertion
+                    gray = cv2.cvtColor(image_to_read, cv2.COLOR_BGR2GRAY)
+
+                    #fjerner alt som ikker er beksvart skrift. en gråskala kan inneholde 256 nyanser av grått - og NO ønske vi å gjøre det helt hvitt med bakgrunnen fordi det
+                    # det skaper støy til nå.
+                    _, binary_image = cv2.threshold(gray, 100, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
+
                     #Tesseract config:
                     #--oem 3: standard ai motor
                     #--oem 7: tvinger tesseract for å se på bildet med EN linje med tekst.
                     #-c tessedit_char_whitelist= -> bare tillat tegnene fra allowlist under på variabelen tesseract_result.
                     tesseract_config= r'--oem 3 --psm 7 -c tessedit_char_whitelist=0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 
-
-
                     # vi forteller at resultatet skal inneholde config linjen med allowlist.
-                    ocr_text =pytesseract.image_to_string(image_to_read, config=tesseract_config)
+                    ocr_text =pytesseract.image_to_string(binary_image, config=tesseract_config)
                 else:
                     ocr_text= ""
 

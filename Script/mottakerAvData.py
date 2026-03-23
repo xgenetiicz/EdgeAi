@@ -121,12 +121,23 @@ try:
                 # Kjører EasyOCR BARE på det utklipte bildet - dette er for å spare
                 if image_to_read is not None and image_to_read.size > 0:
 
+                    #Prøver å forstørre bildet for at den kan lese bedre    
+                    image_to_read = cv2.resize(image_to_read, None, fx=2, fy=2, interpolation=cv2.INTER_CUBIC)
+
                     #Testing with convertion
                     gray = cv2.cvtColor(image_to_read, cv2.COLOR_BGR2GRAY)
+                    gray = cv2.GaussianBlur(gray,(5, 5), 0)
 
                     #fjerner alt som ikker er beksvart skrift. en gråskala kan inneholde 256 nyanser av grått - og NO ønske vi å gjøre det helt hvitt med bakgrunnen fordi det
                     # det skaper støy til nå.
                     _, binary_image = cv2.threshold(gray, 100, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
+                    
+                    binary_image = cv2.adaptiveThreshold(gray, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 11, 2)
+
+                    #lagring
+                    debug_path = os.path.join(DETECTION_PATH, f"debug_ocr_{timestamp}.jpg")
+                    cv2.imwrite(debug_path, binary_image)
+
 
                     #Tesseract config:
                     #--oem 3: standard ai motor

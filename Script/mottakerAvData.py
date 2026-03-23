@@ -30,8 +30,10 @@ for path in [TRAIN_PATH, DETECTION_PATH, CAR_PATH]:
 
 # AI - modell oppstart på RAM ved oppstart på Raspberry pi 5
 print("Initialiserer 'hjernen' (YOLOv8 + OCR)", flush=True)
+
 # Vi bruker 'modeller/best.pt' for å matche volum-mappingen i docker-compose
 model = YOLO("modeller/best.pt") # Bruker den trenede modellen som ligger i samme mappe. Sørg for at "best.pt" er der før oppstart. skal ligge på /media/genetiicz/pathtossd/modeller/best.pt
+
 reader = easyocr.Reader(['en'], gpu=False)
 print("Systemet er nå klart for å identifisere skilt.", flush=True)
 
@@ -50,7 +52,7 @@ cap = cv2.VideoCapture(RTSP_STREAM_URL)
 if not cap.isOpened():
     print(f"Feil: Klarte ikke å hente ut RTSP-strømmen fra {RTSP_STREAM_URL}.\nSjekk loggene i stacken på portainer på pi 4 for detaljer.", flush=True)
     
-    #Vi fortsetter som videre hvis det funker -> neste er logikk for å hente bilder og sende til yolov8 modellen.
+    #Vi fortsetter som videre hvis det funker -> neste er logikk for å hente bilder og sende til yolov8/best.pt modellen.
 else:
     print(f"RTSP-strømmen fungerer, henter video fra {RTSP_STREAM_URL}", flush=True)
 
@@ -131,6 +133,9 @@ try:
                     # Noen ganger leser OCR skiltet i to deler (f.eks "SU" og "92254"). 
                     # Her slår vi sammen all tekst den fant i bildet til en streng.
                     samlet_tekst = "".join([text for (_, text, prob) in ocr_result]).replace(" ", "").upper()
+                    
+                    # Er nødt til å se hva easyOCR gjetter skiltnummeret siden den bommer hver gang.
+                    print(f"---DEBUGGING: EASYOCR GJETTET SKILTNR SOM: '{samlet_tekst}' ", flush=True)
                     
                     # Regex leter etter nøyaktig 2 bokstaver og 5 tall i den samlede teksten.
                     match = re.search(r'[A-Z]{2}[0-9]{5}', samlet_tekst) # denne er superviktig.

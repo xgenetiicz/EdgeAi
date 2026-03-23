@@ -3,7 +3,8 @@ import time
 import cv2 # for tegning og bildebehandling slik at vi viser visuelt hva som blir identifisert!
 import numpy as np # Dette er for bildematriser
 from ultralytics import YOLO # AI - motoren som gjør Object identifisering
-import easyocr # Skiltleseren
+#   import easyocr # Skiltleseren
+import pytesseract  #prøver ut ny motor for skiltlesing.
 import traceback # Henter ut nøyaktig feilmelding ved krasj
 import re # NYTT: Importerer regex for å fiske ut norske skilt fra tekststøyen
 
@@ -29,12 +30,10 @@ for path in [TRAIN_PATH, DETECTION_PATH, CAR_PATH]:
         os.makedirs(path)
 
 # AI - modell oppstart på RAM ved oppstart på Raspberry pi 5
-print("Initialiserer 'hjernen' (YOLOv8 + OCR)", flush=True)
+print("Initialiserer 'hjernen' (YOLOv8 + Tesseract)",flush=True)
 
 # Vi bruker 'modeller/best.pt' for å matche volum-mappingen i docker-compose
 model = YOLO("modeller/best.pt") # Bruker den trenede modellen som ligger i samme mappe. Sørg for at "best.pt" er der før oppstart. skal ligge på /media/genetiicz/pathtossd/modeller/best.pt
-
-reader = easyocr.Reader(['en'], gpu=False)
 print("Systemet er nå klart for å identifisere skilt.", flush=True)
 
 # Liste over objekter som skal trigge på lagring
@@ -121,21 +120,30 @@ try:
 
                 # Kjører EasyOCR BARE på det utklipte bildet - dette er for å spare
                 if image_to_read is not None and image_to_read.size > 0:
-                    # NY LOGIKK: allowlist tvinger EasyOCR til å bare gjette på STUB og TALL, ikke flagg og småbokstaver
-                    ocr_result = reader.readtext(image_to_read, allowlist='0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ')
+
+                    #Tesseract config:
+                    #--oem 3: standard ai motor
+                    #--oem 7: tvinger tesseract for å se på bildet med EN linje med tekst.
+                    #-c tessedit_char_whitelist= -> bare tillat tegnene fra allowlist under på variabelen tesseract_result.
+                    tesseract_config= r'--oem 3 --psm 7 -c tessedit_char_whitelist=0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+
+
+
+                    # vi forteller at resultatet skal inneholde config linjen med allowlist.
+                    ocr_text =pytesseract.image_to_string(image_to_read, config=tesseract_config)
                 else:
-                    ocr_result = []
+                    ocr_text= ""
 
                 skilt_lest = False
                 
-                # vi må endre logikk slik at easyocr forstår hvordan den skal lese skiltet
-                if ocr_result:
+                # vi må endre logikk slik at tesseract forstår hvordan den skal lese skiltet
+                if ocr_text:
                     # Noen ganger leser OCR skiltet i to deler (f.eks "SU" og "92254"). 
                     # Her slår vi sammen all tekst den fant i bildet til en streng.
-                    samlet_tekst = "".join([text for (_, text, prob) in ocr_result]).replace(" ", "").upper()
+                    samlet_tekst = ocr_text.replace(" ", "").replace("\n", "").upper()
                     
                     # Er nødt til å se hva easyOCR gjetter skiltnummeret siden den bommer hver gang.
-                    print(f"---DEBUGGING: EASYOCR GJETTET SKILTNR SOM: '{samlet_tekst}' ", flush=True)
+                    print(f"LESING: Tesseract leser skiltnr som: '{samlet_tekst}' ", flush=True)
                     
                     # Regex leter etter nøyaktig 2 bokstaver og 5 tall i den samlede teksten.
                     match = re.search(r'[A-Z]{2}[0-9]{5}', samlet_tekst) # denne er superviktig.

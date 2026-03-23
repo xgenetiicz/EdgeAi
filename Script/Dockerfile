@@ -5,6 +5,7 @@ FROM python:3.11-slim
 RUN apt-get update
 RUN apt-get install -y libgl1
 RUN apt-get install -y libglib2.0-0
+RUN apt-get install -y tesseract-ocr
 RUN rm -rf /var/lib/apt/lists/*
 
 # Arbeidsmappe i containeren
@@ -17,10 +18,13 @@ RUN pip install --no-cache-dir numpy
 #opencv er nøkkelen for rtsp streaming.
 RUN pip install --no-cache-dir opencv-python-headless  
 RUN pip install --no-cache-dir ultralytics
-RUN pip install --no-cache-dir easyocr
+#  RUN pip install --no-cache-dir easyocr
 
 # Last ned AI-modeller under bygging
-RUN python -c "import easyocr; easyocr.Reader(['en'])"
+#RUN python -c "import easyocr; easyocr.Reader(['en'])"
+
+#Vi tester tesseract siden EasyOCR bommer lettvint på karakterer, gjør confusion med "S" & 5.
+RUN pip install  --no-cache-dir pytesseract
 
 # Kopierer scriptet
 COPY mottakerAvData.py .
@@ -33,7 +37,7 @@ RUN mkdir -p /app/modeller
 
 
 # Eksponerer port 5000
-EXPOSE 5000
+#   EXPOSE 5000
 
 # Starter appen
 CMD ["python", "mottakerAvData.py"]

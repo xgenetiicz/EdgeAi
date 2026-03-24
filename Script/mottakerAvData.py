@@ -83,8 +83,8 @@ try:
             print("Mottok en korrupt datapakke eller korrupt databilde fra strømmen, hopper over bildet.", flush=True)
             continue
 
-        #Vi sjekker ai for hvert 10 bilde siden dette er 60 fps. 
-        if frame_counter % 6 == 0:
+        #Vi sjekker for 15 fps faktisk, og sjekker 3 ganger i sekundet - så vi deler med en modul på 5 for ingen rest.
+        if frame_counter % 5 == 0:
 
             #vi identifiserer hva modellen fant
             results = model(frame, verbose=False, conf=0.7) 

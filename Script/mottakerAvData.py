@@ -59,7 +59,12 @@ else:
 #Må sette en uendelig løkke slik at scriptet holder seg i live for å gjøre bildelogikken.
 try:
     while True:
-        ret, frame = cap.read()
+        # Tving OpenCV til å hoppe over alle bildene som ligger i køen
+        # slik at vi alltid analyserer det nyeste bildet fra kameraet
+        for _ in range(5): # justerer tallet hvis det fortsatt går tregt.
+            cap.grab() 
+        
+        ret, frame = cap.retrieve() # Hent det ferskeste bildet
 
         frame_counter += 1
 
@@ -141,7 +146,7 @@ try:
                 if ocr_result:
                     # Noen ganger leser OCR skiltet i to deler (f.eks "SU" og "92254"). 
                     # Her slår vi sammen all tekst den fant i bildet til en streng.
-                    samlet_tekst = "".join([text for (_, text, prob) in ocr_result]).replace(" ", "").upper()
+                    samlet_tekst = "".join(ocr_result).replace(" ", "").upper()
                     
                     # Er nødt til å se hva easyOCR gjetter skiltnummeret siden den bommer hver gang.
                     print(f"---DEBUGGING: EASYOCR GJETTET SKILTNR SOM: '{samlet_tekst}' ", flush=True)

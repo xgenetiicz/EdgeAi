@@ -77,7 +77,7 @@ services:
 
   image-processor:
     build: 
-      context: ../Script 
+      context: ../Docker 
       dockerfile: Dockerfile
     container_name: image_processor
     restart: always

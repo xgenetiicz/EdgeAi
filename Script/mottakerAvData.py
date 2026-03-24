@@ -61,7 +61,7 @@ try:
     while True:
         # Tving OpenCV til å hoppe over alle bildene som ligger i køen
         # slik at vi alltid analyserer det nyeste bildet fra kameraet
-        for _ in range(5): # justerer tallet hvis det fortsatt går tregt.
+        for _ in range(10): # justerer tallet hvis det fortsatt går tregt.
             cap.grab() 
         
         ret, frame = cap.retrieve() # Hent det ferskeste bildet
@@ -69,9 +69,18 @@ try:
         frame_counter += 1
 
         if not ret:
-            print("Mistet forbindelsen til rtsp - strømmen, prøver å gjennoprette streamen om 5 sekunder.", flush=True)
-            time.sleep(5)
-            cap = cv2.VideoCapture(RTSP_STREAM_URL)
+            print("Mistet forbindelsen til rtsp - strømmen, prøver å gjennoprette stream.", flush=True)
+            for sekund in range(5,0, -1):
+                print(f"Streamen gjenopprettes om {sekund} sekunder")
+                time.sleep(1)
+
+                print(f"Streamen tilkobles på nytt nå!", flush=True)
+                cap = cv2.VideoCapture(RTSP_STREAM_URL)
+                continue
+        
+        #Sjekker for bildetap siden dette viste seg i loggen på portainer
+        if frame is None or frame.size == 0:
+            print("Mottok en korrupt datapakke eller korrupt databilde fra strømmen, hopper over bildet.", flush=True)
             continue
 
         #Vi sjekker ai for hvert 10 bilde siden dette er 60 fps. 
@@ -134,9 +143,15 @@ try:
                     gray= cv2.cvtColor(image_to_read, cv2.COLOR_BGR2GRAY)
 
                     _, binary_image = cv2.threshold(gray, 130, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
+
+                    #prøver dilation fra tesseract branchen igjen... "fylle hullene med bleksvart"
+                    inverted= cv2.bitwise_not(binary_image)
+                    kernel=np.ones((3,3), np.uint8)
+                    dilated = cv2.dilate(inverted, kernel, iterations=1)
+                    final_image = cv2.bitwise_not(dilated)
                     
                     # allowlist tvinger EasyOCR til å bare gjette på STUB og TALL, ikke flagg og småbokstaver
-                    ocr_result = reader.readtext(binary_image, allowlist='0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ', detail=0, paragraph=False)
+                    ocr_result = reader.readtext(final_image, allowlist='0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ', detail=0, paragraph=False)
                 else:
                     ocr_result = []
 

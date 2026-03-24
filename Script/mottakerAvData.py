@@ -125,13 +125,13 @@ try:
                     #-- VI TAR MED BILDEVASKINGEN FRA TESSERACT BRANCHEN SLIK AT VI TESTER DET MED EASYOCR---
 
                     #vi tester med å forstørre bildet som fungerer bra ved test med tesseract
-                    image_to_read = cv2.resize(image_to_read, None, fx=2, fy=2, interpolation=cv2.INTER_CUBIC)
+                    image_to_read = cv2.resize(image_to_read, None, fx=1.5, fy=1.5, interpolation=cv2.INTER_CUBIC)
                     gray= cv2.cvtColor(image_to_read, cv2.COLOR_BGR2GRAY)
 
                     _, binary_image = cv2.threshold(gray, 130, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
                     
                     # allowlist tvinger EasyOCR til å bare gjette på STUB og TALL, ikke flagg og småbokstaver
-                    ocr_result = reader.readtext(binary_image, allowlist='0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ')
+                    ocr_result = reader.readtext(binary_image, allowlist='0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ', detail=0, paragraph=False)
                 else:
                     ocr_result = []
 

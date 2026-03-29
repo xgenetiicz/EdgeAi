@@ -19,7 +19,7 @@ For å håndtere de innkommende dataene utviklet vi en spesialisert mottaker-tje
 ### 3. Persistent lagring og Volum-mapping
 For å sikre at bildene er tilgjengelige for resten av systemet (Node-RED og AI-logikk), ble Docker-volumer konfigurert:
 <ul>
-  <li>**NVMe-lagring:** Containeren ble konfigurert til å lagre bildene direkte i mappen `/media/genetiicz/storage/bil/bilder` på SSD-en.</li>
+  <li>**NVMe-lagring:** Containeren ble konfigurert til å lagre bildene direkte i mappen `${STORAGE_BASE}/bilder` på SSD-en.</li>
   <li>**Delt tilgang:** Ved å mappe `/bilder` i Python-containeren mot samme fysiske mappe som i Node-RED-containeren, oppnådde vi umiddelbar datatilgang på tvers av tjenester.</li>
 </ul>
 

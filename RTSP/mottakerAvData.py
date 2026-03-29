@@ -15,8 +15,6 @@ RTSP_STREAM_URL = f"{RTSP_STREAM_BASE}:{RTSP_PORT}/bil" # RTSP URL for streaming
 # uten å bekymre oss for nettverkskonfigurasjon, 
 # og det gir en stabil og sikker forbindelse mellom enhetene, dette er for å unngå ulike subnett og slikt.
 
-# --- RIKTIG_PATH FOR SSD ---
-# /media/genetiicz/storage/bil/bilder:/bilder 
 BASE_PATH = "/bilder"
 TRAIN_PATH = os.path.join(BASE_PATH, "roboflow") # Rå-bilder for læring
 DETECTION_PATH = os.path.join(BASE_PATH, "deteksjoner") # Ferdige bilder

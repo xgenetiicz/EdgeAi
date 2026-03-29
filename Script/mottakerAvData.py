@@ -79,62 +79,80 @@ try:
                 continue
         
         #Sjekker for bildetap siden dette viste seg i loggen på portainer
-        if frame is None or frame.size == 0:
-            print("Mottok en korrupt datapakke eller korrupt databilde fra strømmen, hopper over bildet.", flush=True)
+        if frame is None or frame.size == 0: #sjekker om bildet er er lik 0 eller faktisk null.
+            print("Mottok en korrupt datapakke eller korrupt databilde fra strømmen, hopper over bildet.", flush=True) 
             continue
 
         #Vi sjekker for 15 fps faktisk, og sjekker 3 ganger i sekundet - så vi deler med en modul på 5 for ingen rest.
         if frame_counter % 5 == 0:
 
             #vi identifiserer hva modellen fant
-            results = model(frame, verbose=False, conf=0.7) 
+            results = model(frame, verbose=False, conf=0.7) #conf er konfidensgrensen. Slik at modellen må være 70% sikker på at det den ser er en bil eller et skilt før den tegner bb og sender det til ocr. 
             annotated_frame = results[0].plot() #Tegner bb automatisk 
 
-            found_classes = set()
-            car_box = None
-            plate_box = None
+            found_classes = set() # for å holde styr på hvilke klasser vi har funnet i bildet, set () er for unike verdier slik det ikke oppstår duplikater.
+            car_box = None # Vi starter med None fordi vi ikke har funnet noen enda
+            plate_box = None # Når vi finner bil eller skilt - så vil objektet lagres i disse variablene til deres respektive klasse som er fra TARGET_OBJECTS listen.
 
-            for r in results:
-                for box in r.boxes:
-                    name = model.names[int(box.cls[0])] 
-                    found_classes.add(name)
+            for r in results: # Det kan være flere resultater i samme bilde, så vi må iterere gjennom alle resultatene for å se hva vi har funnet.
+                for box in r.boxes: # for hver boks som modellen har tegnet rundt det den fant, så sjekker vi hva det er.
+                    name = model.names[int(box.cls[0])]  #henter navnet ved å legge det inn i en ny variabel som er "name" for å vise resultatet neste linje.
+                    found_classes.add(name) # resultatet vises her og det er lettere å lese dette som "name" variabel.
 
-                    #Lagre koordinator hvis klassene blir funnet:
+                    #Lagre koordinator hvis klassene blir funnet: - dette er selvforklarende etter løkken vi implementerte for å sjekke hva modellen fant av bilder/resultater
                     if name == "car":
-                        car_box = box.xyxy[0].tolist()
-                    elif name == "license plate":
-                        plate_box = box.xyxy[0].tolist()
+                        car_box = box.xyxy[0].tolist() #tegn xyxy koordinater
+                    elif name == "license plate": 
+                        plate_box = box.xyxy[0].tolist() #tegn xyxy koordinater
             
-            timestamp = int(time.time())
+            timestamp = int(time.time()) #bruker timestamp for å lagre bilder med unike navn, dette er viktig for å unngå overskriving av bilder og for å kunne spore når bildene ble tatt.
 
             # Sjekker om vi fant bil eller skilt
-            if any(obj in TARGET_OBJECTS for obj in found_classes):
+            if any(obj in TARGET_OBJECTS for obj in found_classes): # vi sjekker for hvilke klasser vi fant i bildet, og hvis noen av det er i TARGET_OBJECTS arrayet
+            # så kjører vi en løkke i target objects for hver objekt og itererer gjennom arrayet for å se hva vi fant av bilder i found_classes som er resultatet av boksene den har tegnet.
                 
-                image_to_read = None
+                image_to_read = None # setter denne som null og tar dette i bruk senere ved å klippe ut selve bildet vi fant.
                 
-                # LOGIKK: Klipp ut (crop) det vi fant før vi sender det til EasyOCR
+                # LOGIKK: Klipp ut (crop) det vi fant før vi sender det til EasyOCR - vi sjekker først for license plate alltid ettersom dette er 
+                # det kritiske funksjonelle kravet for prosjektet -  uten skilt får vi ingen lagring eller videre logikk.
                 if plate_box:
-                    # AI fant skiltet! Vi klipper ut bare skiltet.
+                    # Vi mapper koordinatene til listen plate_box (DETTE ER KOORDINATER FRA if name == "license plate") og gjør dem alle desimaltall til heltall ved å sette dem til int.
+                    # fordi det er fire uavhengige literaler for hver iterasjon av løkken, der hver x og y akse representer variabelen ulikt fordi bilen er i fart - og da endrer matten seg over 
+                    # tid på grunn av hastighet og bevegelse. 
                     x1, y1, x2, y2 = map(int, plate_box)
+
+                    #Vil også se hvilke koordinater best.pt fant og hva den tegner i bildet. Fint å ha hvis det ikke finner skiltet, og da kan vi se om
+                    # den tegner feil.
+                    print(f"best.pt fant skiltet og tegnet en boks med koordinater: {x1}, {y1}, {x2}, {y2}", flush=True)
                     
-                    # NY LOGIKK: Legg til padding (luft) rundt skiltet for at OCR skal klare å lese grensene
-                    pad = 15
-                    x1 = max(0, x1 - pad)
-                    y1 = max(0, y1 - pad)
+                    # Vi har satt til padding rundt skiltet og bokstavene for å hjelpe EasyOCR me d å lese skiltet bedre, og se tydeligere forskjell mellom bokstavene og tallene.
+                    pad = 15 # for nå er det bra, men ved flere tester og skalering må dette justeres.
+                    x1 = max(0, x1 - pad) # vi forteller at x1 og y1 er minimum 0 slik at vi ikke klipper utenfor - fordi det gir feil.
+                    y1 = max(0, y1 - pad) # på grunn av x1 er venstre side av bildet og y1 er toppen av bildet, så må vi sørge for at vi ikke går under 0 når vi legger til padding.
                     x2 = min(frame.shape[1], x2 + pad)
                     y2 = min(frame.shape[0], y2 + pad)
                     
-                    image_to_read = frame[y1:y2, x1:x2]
-                    print(f"[{time.strftime('%H:%M:%S')}] Skilt detektert! Skanner skiltet ->", flush=True)
+                    image_to_read = frame[y1:y2, x1:x2] # image_to_read inneholder koordinatene nå til det utklipte bildet av skiltet gjennom koordinater.
+                    print(f"[{time.strftime('%H:%M:%S')}] Skilt detektert! Skanner skiltet ->", flush=True) # vi printer ut at vi har funnet skiltet og sender videre til EasyOCR.
 
-                elif car_box:
-                    # AI fant bare bilen. Vi klipper ut bilen og leter etter tekst på den.
+                elif car_box: # Hvis den finner bilen først så er det fortsatt verdt å prøve å lese skiltet, så vi klipper ut bilen og sender det til EasyOCR for å se om den klarer å finne skiltet der.
+                    # Vi mapper koordinatene til listen car_box (DETTE ER KOORDINATER FRA if name == "car") og gjør dem alle desimaltall til heltall ved å sette dem til int.
+                    # fordi det er fire uavhengige literaler for hver iterasjon av løkken, der hver x og y akse representer variabelen ulikt fordi bilen er i fart - og da endrer matten seg over 
+                    # tid på grunn av hastighet og bevegelse. (hentet fra plate_box logikken).
                     x1, y1, x2, y2 = map(int, car_box)
-                    image_to_read = frame[y1:y2, x1:x2]
+
+                    x1 = max(0, x1 - pad) # vi forteller at x1 og y1 er minimum 0 slik at vi ikke klipper utenfor - fordi det gir feil.
+                    y1 = max(0, y1 - pad) # på grunn av x1 er venstre side av bildet og y1 er toppen av bildet, så må vi sørge for at vi ikke går under 0 når vi legger til padding.
+                    x2 = min(frame.shape[1], x2 + pad)
+                    y2 = min(frame.shape[0], y2 + pad)
+
+                    #initialiserer variabelen image_to_read siden vi har et utklipt bilde nå basert på hvilket objekt den fant først -> men sluttresultate vil alltid være license_plate
+                    # Ellers vil denne kaste en feilmelding senere når vi sender den til EasyOCR - da vil den si at den ikke kan lese tekten av det utklipte bildet.
+                    image_to_read = frame[y1:y2, x1:x2] #Her klipper det bildet vi har fått koordinater på og paddet ferdig.
                     print(f"[{time.strftime('%H:%M:%S')}] Bil detektert! Skanner bilen for skilt ->", flush=True)
 
-                # Kjører EasyOCR BARE på det utklipte bildet - dette er for å spare
-                if image_to_read is not None and image_to_read.size > 0:
+                # Kjører EasyOCR BARE på det utklipte bildet - dette er gjort for å forbedre lesingen samt optimalisere den.
+                if image_to_read is not None and image_to_read.size > 0: # må være større enn 0 for da vet vi at det ligger et bilde med tall som kan leses - og som ikke er None eller null.
 
                     #-- VI TAR MED BILDEVASKINGEN FRA TESSERACT BRANCHEN SLIK AT VI TESTER DET MED EASYOCR---
 
@@ -163,7 +181,7 @@ try:
                     # Her slår vi sammen all tekst den fant i bildet til en streng.
                     samlet_tekst = "".join(ocr_result).replace(" ", "").upper()
                     
-                    # Er nødt til å se hva easyOCR gjetter skiltnummeret siden den bommer hver gang.
+                    # Er nødt til å se hva easyOCR gjetter skiltnummeret siden den bommer av og til.
                     print(f"---DEBUGGING: EASYOCR GJETTET SKILTNR SOM: '{samlet_tekst}' ", flush=True)
                     
                     # Regex leter etter nøyaktig 2 bokstaver og 5 tall i den samlede teksten.

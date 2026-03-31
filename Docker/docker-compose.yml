@@ -77,8 +77,8 @@ services:
 
   image-processor:
     build: 
-      context: ../Docker 
-      dockerfile: Dockerfile
+      context: .. #Vi er i rot mappen.
+      dockerfile: Docker/Dockerfile #Docker file ligger her nå, det er derfor build failet nå fordi den har blitt flyttet på.
     container_name: image_processor
     restart: always
     ports:

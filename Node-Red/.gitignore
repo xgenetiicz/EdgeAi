@@ -1,0 +1,10 @@
+node_modules/
+.config.nodes.json
+.config.nodes.json.backup
+.config.runtime.json
+.config.runtime.json.backup
+.config.users.json
+.config.users.json.backup
+.flows.json.backup
+flows_cred.json
+settings.js

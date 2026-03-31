@@ -14,173 +14,6 @@
         ]
     },
     {
-        "id": "input_final",
-        "type": "ui-text-input",
-        "z": "svv_bachelor_final_fix",
-        "group": "ui_group_final",
-        "name": "Skilt",
-        "label": "Skriv skiltnummer",
-        "order": 1,
-        "width": 0,
-        "height": 0,
-        "topic": "payload",
-        "topicType": "str",
-        "mode": "text",
-        "tooltip": "",
-        "delay": 300,
-        "passthru": true,
-        "sendOnDelay": true,
-        "sendOnBlur": true,
-        "sendOnEnter": true,
-        "className": "",
-        "clearable": false,
-        "sendOnClear": false,
-        "icon": "",
-        "iconPosition": "left",
-        "iconInnerPosition": "inside",
-        "x": 90,
-        "y": 40,
-        "wires": [
-            [
-                "prep_final"
-            ]
-        ]
-    },
-    {
-        "id": "prep_final",
-        "type": "function",
-        "z": "svv_bachelor_final_fix",
-        "name": "Klargjør API",
-        "func": "// 1. Sjekk at vi har mottatt et skiltnummer fra dashboardet\nif (!msg.payload || msg.payload.length < 2) {\n    return null;\n}\n\n// 2. Hent API-nøkkelen fra Environment Variables (image_da9de4.png)\nconst apiKey = env.get(\"SVV_API_KEY\");\n\n// 3. Sikkerhetssjekk: Stopp hvis nøkkelen ikke finnes\nif (!apiKey) {\n    node.error(\"FEIL: API-nøkkelen 'SVV_API_KEY' ble ikke funnet i Environment Variables!\");\n    return null;\n}\n\n// 4. Rens skiltnummeret (fjerner mellomrom og gjør til store bokstaver)\nconst skilt = msg.payload.toString().replace(/\\s+/g, '').toUpperCase();\n\n// 5. Sett opp URL for Enkeltoppslag-API-et\nmsg.url = \"https://akfell-datautlevering.atlas.vegvesen.no/enkeltoppslag/kjoretoydata?kjennemerke=\" + skilt;\n\n// 6. Legg til de påkrevde headerne for Statens Vegvesen\nmsg.headers = {\n    \"SVV-Authorization\": \"Apikey \" + apiKey.trim(),\n    \"Accept\": \"application/json\",\n    \"User-Agent\": \"Node-RED-Bachelor-Project\"\n};\n\nreturn msg;",
-        "outputs": 1,
-        "timeout": "",
-        "noerr": 0,
-        "initialize": "",
-        "finalize": "",
-        "libs": [],
-        "x": 250,
-        "y": 40,
-        "wires": [
-            [
-                "http_final"
-            ]
-        ]
-    },
-    {
-        "id": "http_final",
-        "type": "http request",
-        "z": "svv_bachelor_final_fix",
-        "name": "SVV API",
-        "method": "GET",
-        "ret": "txt",
-        "paytoqs": "ignore",
-        "url": "",
-        "tls": "",
-        "persist": false,
-        "proxy": "",
-        "insecureHTTPParser": false,
-        "authType": "",
-        "senderr": false,
-        "headers": [],
-        "x": 140,
-        "y": 100,
-        "wires": [
-            [
-                "logic_final"
-            ]
-        ]
-    },
-    {
-        "id": "logic_final",
-        "type": "function",
-        "z": "svv_bachelor_final_fix",
-        "name": "DIN LOGIKK (DeepFind)",
-        "func": "// 1. SIKRE AT PAYLOAD ER ET OBJEKT (Fra din flows.json)\nlet payload = msg.payload;\nif (typeof payload === \"string\") {\n    try { payload = JSON.parse(payload); }\n    catch (e) { return { payload: { found: false, error: \"Ugyldig JSON\" } }; }\n}\n\nconst bil = payload?.kjoretoydataListe?.[0];\nif (!bil) return { payload: { found: false, error: \"Ingen bil funnet\" } };\n\n// 2. DINE ORIGINALE HJELPEFUNKSJONER (IKKE RØR)\nfunction deepFind(obj, key) {\n    let results = [];\n    if (!obj || typeof obj !== 'object') return results;\n    if (obj[key]) results.push(obj[key]);\n    for (let k in obj) { results.push(...deepFind(obj[k], key)); }\n    return results;\n}\n\nfunction pick(v) {\n    if (Array.isArray(v)) return pick(v[0]);\n    if (v && typeof v === 'object') return v.verdi || v.navn || v.tekst || \"\";\n    return v || \"\";\n}\n\n// 3. BEVAR DET SOM FUNGERER (MERKE OG REG-DATO)\nconst merke = pick(deepFind(bil, \"fabrikantnavn\")) || \"TOYOTA\";\nconst modell = pick(deepFind(bil, \"handelsbetegnelse\")) || \"AURIS\";\nconst regRaw = pick(deepFind(bil, \"registrertForstegangNorgeDato\"));\n\n// 4. EU-CANDS LOGIKK (Her henter vi tilbake din originale søke-metode)\nconst euCands = [\n    ...deepFind(bil, \"nesteFristForGodkjentPeriodiskKjoretoykontroll\"),\n    ...deepFind(bil, \"kontrollfrist\"),\n    ...deepFind(bil, \"nesteFrist\"),\n    ...deepFind(bil, \"frist\"),\n    bil?.periodiskKjoretoykontroll?.kontrollfrist\n];\nconst euRaw = pick(euCands); // Plukker den første gyldige datoen fra listen din\n\nfunction formatDato(d) {\n    if (!d || d.length < 10) return \"Ikke oppgitt\";\n    const [y, m, day] = d.slice(0, 10).split(\"-\");\n    return `${day}.${m}.${y}`;\n}\n\n// 5. SEND UT DATA (Nøyaktig samme format som før)\nmsg.payload = {\n    found: true,\n    merke: merke.toString().toUpperCase(),\n    modell: modell.toString().toUpperCase(),\n    registrert: formatDato(regRaw),\n    eu_frist: formatDato(euRaw),\n    eu_farge: (euRaw && new Date(euRaw) < new Date()) ? '#be123c' : '#15803d'\n};\n\nreturn msg;",
-        "outputs": 1,
-        "timeout": "",
-        "noerr": 0,
-        "initialize": "",
-        "finalize": "",
-        "libs": [],
-        "x": 350,
-        "y": 100,
-        "wires": [
-            [
-                "design_final"
-            ]
-        ]
-    },
-    {
-        "id": "design_final",
-        "type": "ui-template",
-        "z": "svv_bachelor_final_fix",
-        "group": "ui_group_final",
-        "page": "",
-        "ui": "",
-        "name": "Design",
-        "order": 2,
-        "width": 6,
-        "height": 4,
-        "format": "<div v-if=\"msg.payload && msg.payload.found\" style=\"background: white; padding: 25px; border-radius: 16px; border-left: 8px solid #0056b3; box-shadow: 0 10px 15px rgba(0,0,0,0.1); font-family: sans-serif;\">\n    \n    <div style=\"font-size: 0.75em; color: #666; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px;\">Kjøretøyidentitet</div>\n    <div style=\"font-size: 2.2em; font-weight: 900; color: #1a202c; margin-bottom: 25px; line-height: 1;\">\n        {{ msg.payload.merke }} <span style=\"color: #4a5568; font-weight: 300;\">{{ msg.payload.modell }}</span>\n    </div>\n\n    <div style=\"display: grid; grid-template-columns: 1fr 1fr; gap: 15px;\">\n        <div style=\"background: #f8fafc; padding: 15px; border-radius: 10px; border: 1px solid #e2e8f0;\">\n            <div style=\"font-size: 0.7em; color: #64748b; font-weight: bold; margin-bottom: 5px;\">FØRSTE REG. NORGE</div>\n            <div style=\"font-size: 1.2em; font-weight: 700; color: #1e293b;\">{{ msg.payload.registrert }}</div>\n        </div>\n        \n        <div :style=\"{ background: msg.payload.eu_status === 'expired' ? '#fff1f2' : '#f0fdf4', padding: '15px', borderRadius: '10px', border: '1px solid #e2e8f0' }\">\n            <div style=\"font-size: 0.7em; color: #64748b; font-weight: bold; margin-bottom: 5px;\">NESTE EU-KONTROLL</div>\n            <div :style=\"{ fontSize: '1.2em', fontWeight: '700', color: msg.payload.eu_status === 'expired' ? '#be123c' : '#15803d' }\">\n                {{ msg.payload.eu_frist }}\n            </div>\n        </div>\n    </div>\n</div>\n\n<div v-else style=\"padding: 20px; background: #fff1f2; border-radius: 12px; color: #be123c;\">\n    ⚠️ {{ msg.payload?.error || 'Venter på søk...' }}\n</div>",
-        "storeOutMessages": true,
-        "passthru": true,
-        "templateScope": "local",
-        "className": "",
-        "x": 560,
-        "y": 100,
-        "wires": [
-            []
-        ]
-    },
-    {
-        "id": "ui_group_final",
-        "type": "ui-group",
-        "name": "Kjøretøydata",
-        "page": "ui_page_final",
-        "width": "6",
-        "height": "1",
-        "showTitle": true,
-        "className": "",
-        "visible": "true",
-        "disabled": "false",
-        "groupType": "default"
-    },
-    {
-        "id": "ui_page_final",
-        "type": "ui-page",
-        "name": "Søk",
-        "ui": "ui_base_final",
-        "path": "/home",
-        "icon": "",
-        "layout": "grid",
-        "theme": "0d8f875f50376455",
-        "breakpoints": [
-            {
-                "name": "Default",
-                "px": "0",
-                "cols": "3"
-            },
-            {
-                "name": "Tablet",
-                "px": "576",
-                "cols": "6"
-            },
-            {
-                "name": "Small Desktop",
-                "px": "768",
-                "cols": "9"
-            },
-            {
-                "name": "Desktop",
-                "px": "1024",
-                "cols": "12"
-            }
-        ],
-        "className": "",
-        "visible": "true",
-        "disabled": "false"
-    },
-    {
         "id": "ui_base_final",
         "type": "ui-base",
         "name": "BilBase",
@@ -218,5 +51,241 @@
         "modules": {
             "@flowfuse/node-red-dashboard": "1.30.1"
         }
+    },
+    {
+        "id": "ui_page_final",
+        "type": "ui-page",
+        "name": "Søk",
+        "ui": "ui_base_final",
+        "path": "/home",
+        "icon": "",
+        "layout": "grid",
+        "theme": "0d8f875f50376455",
+        "breakpoints": [
+            {
+                "name": "Default",
+                "px": "0",
+                "cols": "3"
+            },
+            {
+                "name": "Tablet",
+                "px": "576",
+                "cols": "6"
+            },
+            {
+                "name": "Small Desktop",
+                "px": "768",
+                "cols": "9"
+            },
+            {
+                "name": "Desktop",
+                "px": "1024",
+                "cols": "12"
+            }
+        ],
+        "className": "",
+        "visible": "true",
+        "disabled": "false"
+    },
+    {
+        "id": "ui_group_final",
+        "type": "ui-group",
+        "name": "Kjøretøydata",
+        "page": "ui_page_final",
+        "width": "6",
+        "height": "1",
+        "showTitle": true,
+        "className": "",
+        "visible": "true",
+        "disabled": "false",
+        "groupType": "default"
+    },
+    {
+        "id": "cd27b7f5b8eef350",
+        "type": "mqtt-broker",
+        "name": "",
+        "broker": "host.docker.internal",
+        "port": 1883,
+        "clientid": "",
+        "autoConnect": true,
+        "usetls": false,
+        "protocolVersion": 4,
+        "keepalive": 60,
+        "cleansession": true,
+        "autoUnsubscribe": true,
+        "birthTopic": "",
+        "birthQos": "0",
+        "birthRetain": "false",
+        "birthPayload": "",
+        "birthMsg": {},
+        "closeTopic": "",
+        "closeQos": "0",
+        "closeRetain": "false",
+        "closePayload": "",
+        "closeMsg": {},
+        "willTopic": "",
+        "willQos": "0",
+        "willRetain": "false",
+        "willPayload": "",
+        "willMsg": {},
+        "userProps": "",
+        "sessionExpiry": ""
+    },
+    {
+        "id": "input_final",
+        "type": "ui-text-input",
+        "z": "svv_bachelor_final_fix",
+        "group": "ui_group_final",
+        "name": "Skilt",
+        "label": "Skriv skiltnummer",
+        "order": 1,
+        "width": 0,
+        "height": 0,
+        "topic": "payload",
+        "topicType": "str",
+        "mode": "text",
+        "tooltip": "",
+        "delay": 300,
+        "passthru": true,
+        "sendOnDelay": true,
+        "sendOnBlur": true,
+        "sendOnEnter": true,
+        "className": "",
+        "clearable": false,
+        "sendOnClear": false,
+        "icon": "",
+        "iconPosition": "left",
+        "iconInnerPosition": "inside",
+        "x": 130,
+        "y": 220,
+        "wires": [
+            [
+                "prep_final"
+            ]
+        ]
+    },
+    {
+        "id": "prep_final",
+        "type": "function",
+        "z": "svv_bachelor_final_fix",
+        "name": "Klargjør API",
+        "func": "// 1. Sjekk at vi har mottatt et skiltnummer fra dashboardet\nif (!msg.payload || msg.payload.length < 2) {\n    return null;\n}\n\n// 2. Hent API-nøkkelen fra Environment Variables (image_da9de4.png)\nconst apiKey = env.get(\"SVV_API_KEY\");\n\n// 3. Sikkerhetssjekk: Stopp hvis nøkkelen ikke finnes\nif (!apiKey) {\n    node.error(\"FEIL: API-nøkkelen 'SVV_API_KEY' ble ikke funnet i Environment Variables!\");\n    return null;\n}\n\n// 4. Rens skiltnummeret (fjerner mellomrom og gjør til store bokstaver)\nconst skilt = msg.payload.toString().replace(/\\s+/g, '').toUpperCase();\n\n// 5. Sett opp URL for Enkeltoppslag-API-et\nmsg.url = \"https://akfell-datautlevering.atlas.vegvesen.no/enkeltoppslag/kjoretoydata?kjennemerke=\" + skilt;\n\n// 6. Legg til de påkrevde headerne for Statens Vegvesen\nmsg.headers = {\n    \"SVV-Authorization\": \"Apikey \" + apiKey.trim(),\n    \"Accept\": \"application/json\",\n    \"User-Agent\": \"Node-RED-Bachelor-Project\"\n};\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 290,
+        "y": 180,
+        "wires": [
+            [
+                "http_final"
+            ]
+        ]
+    },
+    {
+        "id": "http_final",
+        "type": "http request",
+        "z": "svv_bachelor_final_fix",
+        "name": "SVV API",
+        "method": "GET",
+        "ret": "txt",
+        "paytoqs": "ignore",
+        "url": "",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": false,
+        "headers": [],
+        "x": 460,
+        "y": 180,
+        "wires": [
+            [
+                "logic_final"
+            ]
+        ]
+    },
+    {
+        "id": "logic_final",
+        "type": "function",
+        "z": "svv_bachelor_final_fix",
+        "name": "DIN LOGIKK (DeepFind)",
+        "func": "// 1. SIKRE AT PAYLOAD ER ET OBJEKT (Fra din flows.json)\nlet payload = msg.payload;\nif (typeof payload === \"string\") {\n    try { payload = JSON.parse(payload); }\n    catch (e) { return { payload: { found: false, error: \"Ugyldig JSON\" } }; }\n}\n\nconst bil = payload?.kjoretoydataListe?.[0];\nif (!bil) return { payload: { found: false, error: \"Ingen bil funnet\" } };\n\n// 2. DINE ORIGINALE HJELPEFUNKSJONER (IKKE RØR)\nfunction deepFind(obj, key) {\n    let results = [];\n    if (!obj || typeof obj !== 'object') return results;\n    if (obj[key]) results.push(obj[key]);\n    for (let k in obj) { results.push(...deepFind(obj[k], key)); }\n    return results;\n}\n\nfunction pick(v) {\n    if (Array.isArray(v)) return pick(v[0]);\n    if (v && typeof v === 'object') return v.verdi || v.navn || v.tekst || \"\";\n    return v || \"\";\n}\n\n// 3. BEVAR DET SOM FUNGERER (MERKE OG REG-DATO)\nconst merke = pick(deepFind(bil, \"fabrikantnavn\")) || \"TOYOTA\";\nconst modell = pick(deepFind(bil, \"handelsbetegnelse\")) || \"AURIS\";\nconst regRaw = pick(deepFind(bil, \"registrertForstegangNorgeDato\"));\n\n// 4. EU-CANDS LOGIKK (Her henter vi tilbake din originale søke-metode)\nconst euCands = [\n    ...deepFind(bil, \"nesteFristForGodkjentPeriodiskKjoretoykontroll\"),\n    ...deepFind(bil, \"kontrollfrist\"),\n    ...deepFind(bil, \"nesteFrist\"),\n    ...deepFind(bil, \"frist\"),\n    bil?.periodiskKjoretoykontroll?.kontrollfrist\n];\nconst euRaw = pick(euCands); // Plukker den første gyldige datoen fra listen din\n\nfunction formatDato(d) {\n    if (!d || d.length < 10) return \"Ikke oppgitt\";\n    const [y, m, day] = d.slice(0, 10).split(\"-\");\n    return `${day}.${m}.${y}`;\n}\n\n// 5. SEND UT DATA (Nøyaktig samme format som før)\nmsg.payload = {\n    found: true,\n    merke: merke.toString().toUpperCase(),\n    modell: modell.toString().toUpperCase(),\n    registrert: formatDato(regRaw),\n    eu_frist: formatDato(euRaw),\n    eu_farge: (euRaw && new Date(euRaw) < new Date()) ? '#be123c' : '#15803d'\n};\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 670,
+        "y": 180,
+        "wires": [
+            [
+                "design_final"
+            ]
+        ]
+    },
+    {
+        "id": "design_final",
+        "type": "ui-template",
+        "z": "svv_bachelor_final_fix",
+        "group": "ui_group_final",
+        "page": "",
+        "ui": "",
+        "name": "Design",
+        "order": 2,
+        "width": 6,
+        "height": 4,
+        "format": "<div v-if=\"msg.payload && msg.payload.found\" style=\"background: white; padding: 25px; border-radius: 16px; border-left: 8px solid #0056b3; box-shadow: 0 10px 15px rgba(0,0,0,0.1); font-family: sans-serif;\">\n    \n    <div style=\"font-size: 0.75em; color: #666; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px;\">Kjøretøyidentitet</div>\n    <div style=\"font-size: 2.2em; font-weight: 900; color: #1a202c; margin-bottom: 25px; line-height: 1;\">\n        {{ msg.payload.merke }} <span style=\"color: #4a5568; font-weight: 300;\">{{ msg.payload.modell }}</span>\n    </div>\n\n    <div style=\"display: grid; grid-template-columns: 1fr 1fr; gap: 15px;\">\n        <div style=\"background: #f8fafc; padding: 15px; border-radius: 10px; border: 1px solid #e2e8f0;\">\n            <div style=\"font-size: 0.7em; color: #64748b; font-weight: bold; margin-bottom: 5px;\">FØRSTE REG. NORGE</div>\n            <div style=\"font-size: 1.2em; font-weight: 700; color: #1e293b;\">{{ msg.payload.registrert }}</div>\n        </div>\n        \n        <div :style=\"{ background: msg.payload.eu_status === 'expired' ? '#fff1f2' : '#f0fdf4', padding: '15px', borderRadius: '10px', border: '1px solid #e2e8f0' }\">\n            <div style=\"font-size: 0.7em; color: #64748b; font-weight: bold; margin-bottom: 5px;\">NESTE EU-KONTROLL</div>\n            <div :style=\"{ fontSize: '1.2em', fontWeight: '700', color: msg.payload.eu_status === 'expired' ? '#be123c' : '#15803d' }\">\n                {{ msg.payload.eu_frist }}\n            </div>\n        </div>\n    </div>\n</div>\n\n<div v-else style=\"padding: 20px; background: #fff1f2; border-radius: 12px; color: #be123c;\">\n    ⚠️ {{ msg.payload?.error || 'Venter på søk...' }}\n</div>",
+        "storeOutMessages": true,
+        "passthru": true,
+        "templateScope": "local",
+        "className": "",
+        "x": 860,
+        "y": 180,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "9a122602bfda3001",
+        "type": "mqtt in",
+        "z": "svv_bachelor_final_fix",
+        "name": "MQTT Plate Input",
+        "topic": "plate",
+        "qos": "2",
+        "datatype": "auto-detect",
+        "broker": "cd27b7f5b8eef350",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 100,
+        "y": 160,
+        "wires": [
+            [
+                "prep_final",
+                "31fef2b204299f0c"
+            ]
+        ]
+    },
+    {
+        "id": "31fef2b204299f0c",
+        "type": "debug",
+        "z": "svv_bachelor_final_fix",
+        "name": "debug 1",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 320,
+        "y": 60,
+        "wires": []
     }
 ]

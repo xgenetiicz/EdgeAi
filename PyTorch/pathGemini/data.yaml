@@ -1,0 +1,19 @@
+path: /PyTorch/pathGemini
+train: train/images
+val: valid/images
+test: test/images
+
+nc: 2
+names: ['car', 'license plate']
+
+
+# Dette er data.yaml-filen som ble brukt/brukes for å definere trening,test & validering for objektgjenkjenning. 
+# Den spesifiserer stien til trenings,validering og test data
+# Antall klasser som er (nc: 2)
+# samt klassene som skal gjenkjennes ('car', 'license plate').
+
+#--- VIKTIG ---#
+# PATHS AV train, val og test var bilder som ble annotert ved bruk av API sitt gemini med 2.0 flash
+# Dette ble tatt i bruk for å være effektiv, ettersom jeg ikke kunne gå manuelt på et datasett med 22 000 bilder.
+# som ble brukt til å generere bounding boxes og labels for bil og skilt. 
+# og data.yaml peker til disse mappene for trening, test & validering.

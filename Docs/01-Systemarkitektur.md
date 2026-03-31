@@ -20,7 +20,7 @@
   <li>**MQTT (Mosquitto):** Broker konfigurert for å håndtere meldinger og dataoverføring fra ESP32-CAM.</li>
   <li>**InfluxDB 2.x:** Tidsseriedatabase klargjort for strukturert lagring av kjøretøydata og historiske passeringer.</li>
   <li>**Node-RED:** Implementert som systemets sentrale logikkmotor for databehandling og integrasjon mot Statens Vegvesen API.</li>
-  <li>**Persistent lagring:** Konfigurering av faste volumer mot SSD (f.eks. `/media/genetiicz/storage/bil/`) for å sikre data-integritet og hindre datatap ved container-oppdateringer.</li>
+  <li>**Persistent lagring:** Konfigurering av faste volumer mot SSD (f.eks. `${STORAGE_BASE}/`) for å sikre data-integritet og hindre datatap ved container-oppdateringer.</li>
 </ul>
 
 ### 4. Sikkerhet og Konfigurasjonsstyring

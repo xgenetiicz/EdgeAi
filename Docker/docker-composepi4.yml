@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  rtsp-server:
+    image: bluenviron/mediamtx:latest
+    container_name: rtsp-server
+    restart: always
+    network_mode: host
+    volumes:
+      - ${stack_pi4}/mediamtx.yml:/mediamtx.yml
+
+  kamera-pusher:
+    image: linuxserver/ffmpeg:latest
+    container_name: kamera-pusher
+    restart: always
+    network_mode: host
+    privileged: true
+    devices:
+      - "/dev/video0:/dev/video0"
+      - "/dev/video11:/dev/video11"
+    entrypoint: >
+     ffmpeg -hide_banner -loglevel error
+      -f v4l2 -thread_queue_size 1024 -input_format mjpeg -video_size 1280x720 -framerate 30 
+      -i /dev/video0 
+      -vf "fps=15,format=nv12" 
+      -c:v h264_v4l2m2m -b:v 3M -maxrate 4M -bufsize 8M -g 15
+      -f rtsp -rtsp_transport tcp -max_interleave_delta 100000 ${tailscale_pi4_url}

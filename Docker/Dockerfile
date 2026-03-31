@@ -23,7 +23,7 @@ RUN pip install --no-cache-dir easyocr
 RUN python -c "import easyocr; easyocr.Reader(['en'])"
 
 # Kopierer scriptet
-COPY mottakerAvData.py .
+COPY RTSP/mottakerAvData.py .
 
 # Lager bilde-mappen for SSD-en
 RUN mkdir -p /bilder

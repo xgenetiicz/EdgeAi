@@ -37,7 +37,7 @@ services:
     container_name: db
     restart: always
     ports:
-      - "8086:8086"
+      - "8090:8090"
     volumes:
       - ${STORAGE_BASE}/db:/var/lib/influxdb2
       - ${STORAGE_BASE}/db_config:/etc/influxdb2 # Mister ikke volum og gjenbruker samme volum

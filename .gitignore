@@ -22,4 +22,13 @@ nodered/.sessions.json
 Thumbs.db
 
 # Andre logger
-*.log
+*.logNode-Red/node_modules/
+Node-Red/.config.nodes.json
+Node-Red/.config.nodes.json.backup
+Node-Red/.config.runtime.json
+Node-Red/.config.runtime.json.backup
+Node-Red/.config.users.json
+Node-Red/.config.users.json.backup
+Node-Red/.flows.json.backup
+Node-Red/flows_cred.json
+Node-Red/settings.js

@@ -8,9 +8,250 @@
         "env": [
             {
                 "name": "SVV_API_KEY",
-                "value": "",
+                "value": "${SVV_API_KEY}",
                 "type": "str"
             }
+        ]
+    },
+    {
+        "id": "0d8f875f50376455",
+        "type": "ui-theme",
+        "name": "My Theme!",
+        "colors": {
+            "surface": "#ffffff",
+            "primary": "#0094ce",
+            "bgPage": "#eeeeee",
+            "groupBg": "#ffffff",
+            "groupOutline": "#cccccc"
+        },
+        "sizes": {
+            "density": "default",
+            "pagePadding": "12px",
+            "groupGap": "12px",
+            "groupBorderRadius": "4px",
+            "widgetGap": "12px"
+        }
+    },
+    {
+        "id": "ui_base_final",
+        "type": "ui-base",
+        "name": "BilBase",
+        "path": "/dashboard",
+        "appIcon": "",
+        "includeClientData": true,
+        "acceptsClientConfig": [
+            "ui-control",
+            "ui-notification"
+        ],
+        "showPathInSidebar": false,
+        "headerContent": "page",
+        "navigationStyle": "default",
+        "titleBarStyle": "default",
+        "showReconnectNotification": true,
+        "notificationDisplayTime": 5,
+        "showDisconnectNotification": true,
+        "allowInstall": true
+    },
+    {
+        "id": "ecb3a8834e308d0b",
+        "type": "global-config",
+        "env": [
+            {
+                "name": "SVV_API_KEY",
+                "value": "9cfe80a8-baaa-41e2-97e0-c3f869db0f2b",
+                "type": "env"
+            },
+            {
+                "name": "VEGVESEN_API_KEY",
+                "value": "9cfe80a8-baaa-41e2-97e0-c3f869db0f2b",
+                "type": "env"
+            }
+        ],
+        "modules": {
+            "@flowfuse/node-red-dashboard": "1.30.1"
+        }
+    },
+    {
+        "id": "ui_page_final",
+        "type": "ui-page",
+        "name": "Dashboard",
+        "ui": "ui_base_final",
+        "path": "/home",
+        "icon": "",
+        "layout": "grid",
+        "theme": "0d8f875f50376455",
+        "breakpoints": [
+            {
+                "name": "Default",
+                "px": "0",
+                "cols": "3"
+            },
+            {
+                "name": "Tablet",
+                "px": "576",
+                "cols": "6"
+            },
+            {
+                "name": "Small Desktop",
+                "px": "768",
+                "cols": "9"
+            },
+            {
+                "name": "Desktop",
+                "px": "1024",
+                "cols": "12"
+            }
+        ],
+        "order": 1,
+        "className": "",
+        "visible": "true",
+        "disabled": "false"
+    },
+    {
+        "id": "ui_group_final",
+        "type": "ui-group",
+        "name": "Kjøretøydata",
+        "page": "ui_page_final",
+        "width": "6",
+        "height": "1",
+        "order": 1,
+        "showTitle": true,
+        "className": "",
+        "visible": "true",
+        "disabled": "false",
+        "groupType": "default"
+    },
+    {
+        "id": "0afd0b82dc5061bc",
+        "type": "ui-theme",
+        "name": "Default theme",
+        "colors": {
+            "surface": "#ffffff",
+            "primary": "#0094ce",
+            "bgPage": "#eeeeee",
+            "groupBg": "#ffffff",
+            "groupOutline": "#cccccc"
+        },
+        "sizes": {
+            "density": "default",
+            "pagePadding": "12px",
+            "groupGap": "12px",
+            "groupBorderRadius": "4px",
+            "widgetGap": "12px"
+        }
+    },
+    {
+        "id": "e064fd73ae6116bb",
+        "type": "ui-page",
+        "name": "Reserver bil",
+        "ui": "ui_base_final",
+        "path": "/reserver-bil",
+        "icon": "car",
+        "layout": "grid",
+        "theme": "0afd0b82dc5061bc",
+        "breakpoints": [
+            {
+                "name": "Default",
+                "px": "0",
+                "cols": "3"
+            },
+            {
+                "name": "Tablet",
+                "px": "576",
+                "cols": "6"
+            },
+            {
+                "name": "Small Desktop",
+                "px": "768",
+                "cols": "9"
+            },
+            {
+                "name": "Desktop",
+                "px": "1024",
+                "cols": "12"
+            }
+        ],
+        "order": 2,
+        "className": "",
+        "visible": "true",
+        "disabled": "false"
+    },
+    {
+        "id": "37c2dd99774015b8",
+        "type": "ui-group",
+        "name": "Reserverte biler",
+        "page": "e064fd73ae6116bb",
+        "width": 6,
+        "height": 1,
+        "order": 1,
+        "showTitle": true,
+        "className": "",
+        "visible": true,
+        "disabled": "false",
+        "groupType": "default"
+    },
+    {
+        "id": "prep_final",
+        "type": "function",
+        "z": "svv_bachelor_final_fix",
+        "name": "Klargjør API",
+        "func": "// 1. Sjekk at vi har mottatt et skiltnummer fra dashboardet\nif (!msg.payload || msg.payload.length < 2) {\n    return null;\n}\n\n// 2. Hent API-nøkkelen fra Environment Variables \nconst apiKey = env.get(\"SVV_API_KEY\");\n\n// 3. Sikkerhetssjekk: Stopp hvis nøkkelen ikke finnes\nif (!apiKey) {\n    node.error(\"FEIL: API-nøkkelen 'SVV_API_KEY' ble ikke funnet i Environment Variables!\");\n    return null;\n}\n\n// 4. Rens skiltnummeret (fjerner mellomrom og gjør til store bokstaver)\nconst skilt = msg.payload.toString().replace(/\\s+/g, '').toUpperCase();\n\n// 5. Sett opp URL for Enkeltoppslag-API-et\nmsg.url = \"https://akfell-datautlevering.atlas.vegvesen.no/enkeltoppslag/kjoretoydata?kjennemerke=\" + skilt;\n\n// 6. Legg til de påkrevde headerne for Statens Vegvesen\nmsg.headers = {\n    \"SVV-Authorization\": \"Apikey \" + apiKey.trim(),\n    \"Accept\": \"application/json\",\n    \"User-Agent\": \"Node-RED-Bachelor-Project\"\n};\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 250,
+        "y": 40,
+        "wires": [
+            [
+                "http_final"
+            ]
+        ]
+    },
+    {
+        "id": "http_final",
+        "type": "http request",
+        "z": "svv_bachelor_final_fix",
+        "name": "SVV_API_KEY",
+        "method": "GET",
+        "ret": "obj",
+        "paytoqs": "ignore",
+        "url": "",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": false,
+        "headers": [],
+        "x": 500,
+        "y": 40,
+        "wires": [
+            [
+                "logic_final"
+            ]
+        ]
+    },
+    {
+        "id": "logic_final",
+        "type": "function",
+        "z": "svv_bachelor_final_fix",
+        "name": "DIN LOGIKK (DeepFind)",
+        "func": "// 1. SIKRE AT PAYLOAD ER ET OBJEKT (Fra din flows.json)\nlet payload = msg.payload;\nif (typeof payload === \"string\") {\n    try { payload = JSON.parse(payload); }\n    catch (e) { return { payload: { found: false, error: \"Ugyldig JSON\" } }; }\n}\n\nconst bil = payload?.kjoretoydataListe?.[0];\nif (!bil) return { payload: { found: false, error: \"Ingen bil funnet\" } };\n\n// 2. DINE ORIGINALE HJELPEFUNKSJONER (IKKE RØR)\nfunction deepFind(obj, key) {\n    let results = [];\n    if (!obj || typeof obj !== 'object') return results;\n    if (obj[key]) results.push(obj[key]);\n    for (let k in obj) { results.push(...deepFind(obj[k], key)); }\n    return results;\n}\n\nfunction pick(v) {\n    if (Array.isArray(v)) return pick(v[0]);\n    if (v && typeof v === 'object') return v.verdi || v.navn || v.tekst || \"\";\n    return v || \"\";\n}\n\n// 3. BEVAR DET SOM FUNGERER (MERKE OG REG-DATO)\nconst merke = pick(deepFind(bil, \"fabrikantnavn\")) || \"TOYOTA\";\nconst modell = pick(deepFind(bil, \"handelsbetegnelse\")) || \"AURIS\";\nconst regRaw = pick(deepFind(bil, \"registrertForstegangNorgeDato\"));\n\n// 4. EU-CANDS LOGIKK (Her henter vi tilbake din originale søke-metode)\nconst euCands = [\n    ...deepFind(bil, \"nesteFristForGodkjentPeriodiskKjoretoykontroll\"),\n    ...deepFind(bil, \"kontrollfrist\"),\n    ...deepFind(bil, \"nesteFrist\"),\n    ...deepFind(bil, \"frist\"),\n    bil?.periodiskKjoretoykontroll?.kontrollfrist\n];\nconst euRaw = pick(euCands); // Plukker den første gyldige datoen fra listen din\n\nfunction formatDato(d) {\n    if (!d || d.length < 10) return \"Ikke oppgitt\";\n    const [y, m, day] = d.slice(0, 10).split(\"-\");\n    return `${day}.${m}.${y}`;\n}\n\n// 5. SEND UT DATA (Nøyaktig samme format som før)\nmsg.payload = {\n    found: true,\n    merke: merke.toString().toUpperCase(),\n    modell: modell.toString().toUpperCase(),\n    registrert: formatDato(regRaw),\n    eu_frist: formatDato(euRaw),\n    eu_farge: (euRaw && new Date(euRaw) < new Date()) ? '#be123c' : '#15803d'\n};\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 750,
+        "y": 40,
+        "wires": [
+            [
+                "design_final"
+            ]
         ]
     },
     {
@@ -47,70 +288,6 @@
         ]
     },
     {
-        "id": "prep_final",
-        "type": "function",
-        "z": "svv_bachelor_final_fix",
-        "name": "Klargjør API",
-        "func": "// 1. Sjekk at vi har mottatt et skiltnummer fra dashboardet\nif (!msg.payload || msg.payload.length < 2) {\n    return null;\n}\n\n// 2. Hent API-nøkkelen fra Environment Variables (image_da9de4.png)\nconst apiKey = env.get(\"SVV_API_KEY\");\n\n// 3. Sikkerhetssjekk: Stopp hvis nøkkelen ikke finnes\nif (!apiKey) {\n    node.error(\"FEIL: API-nøkkelen 'SVV_API_KEY' ble ikke funnet i Environment Variables!\");\n    return null;\n}\n\n// 4. Rens skiltnummeret (fjerner mellomrom og gjør til store bokstaver)\nconst skilt = msg.payload.toString().replace(/\\s+/g, '').toUpperCase();\n\n// 5. Sett opp URL for Enkeltoppslag-API-et\nmsg.url = \"https://akfell-datautlevering.atlas.vegvesen.no/enkeltoppslag/kjoretoydata?kjennemerke=\" + skilt;\n\n// 6. Legg til de påkrevde headerne for Statens Vegvesen\nmsg.headers = {\n    \"SVV-Authorization\": \"Apikey \" + apiKey.trim(),\n    \"Accept\": \"application/json\",\n    \"User-Agent\": \"Node-RED-Bachelor-Project\"\n};\n\nreturn msg;",
-        "outputs": 1,
-        "timeout": "",
-        "noerr": 0,
-        "initialize": "",
-        "finalize": "",
-        "libs": [],
-        "x": 250,
-        "y": 40,
-        "wires": [
-            [
-                "http_final"
-            ]
-        ]
-    },
-    {
-        "id": "http_final",
-        "type": "http request",
-        "z": "svv_bachelor_final_fix",
-        "name": "SVV API",
-        "method": "GET",
-        "ret": "txt",
-        "paytoqs": "ignore",
-        "url": "",
-        "tls": "",
-        "persist": false,
-        "proxy": "",
-        "insecureHTTPParser": false,
-        "authType": "",
-        "senderr": false,
-        "headers": [],
-        "x": 140,
-        "y": 100,
-        "wires": [
-            [
-                "logic_final"
-            ]
-        ]
-    },
-    {
-        "id": "logic_final",
-        "type": "function",
-        "z": "svv_bachelor_final_fix",
-        "name": "DIN LOGIKK (DeepFind)",
-        "func": "// 1. SIKRE AT PAYLOAD ER ET OBJEKT (Fra din flows.json)\nlet payload = msg.payload;\nif (typeof payload === \"string\") {\n    try { payload = JSON.parse(payload); }\n    catch (e) { return { payload: { found: false, error: \"Ugyldig JSON\" } }; }\n}\n\nconst bil = payload?.kjoretoydataListe?.[0];\nif (!bil) return { payload: { found: false, error: \"Ingen bil funnet\" } };\n\n// 2. DINE ORIGINALE HJELPEFUNKSJONER (IKKE RØR)\nfunction deepFind(obj, key) {\n    let results = [];\n    if (!obj || typeof obj !== 'object') return results;\n    if (obj[key]) results.push(obj[key]);\n    for (let k in obj) { results.push(...deepFind(obj[k], key)); }\n    return results;\n}\n\nfunction pick(v) {\n    if (Array.isArray(v)) return pick(v[0]);\n    if (v && typeof v === 'object') return v.verdi || v.navn || v.tekst || \"\";\n    return v || \"\";\n}\n\n// 3. BEVAR DET SOM FUNGERER (MERKE OG REG-DATO)\nconst merke = pick(deepFind(bil, \"fabrikantnavn\")) || \"TOYOTA\";\nconst modell = pick(deepFind(bil, \"handelsbetegnelse\")) || \"AURIS\";\nconst regRaw = pick(deepFind(bil, \"registrertForstegangNorgeDato\"));\n\n// 4. EU-CANDS LOGIKK (Her henter vi tilbake din originale søke-metode)\nconst euCands = [\n    ...deepFind(bil, \"nesteFristForGodkjentPeriodiskKjoretoykontroll\"),\n    ...deepFind(bil, \"kontrollfrist\"),\n    ...deepFind(bil, \"nesteFrist\"),\n    ...deepFind(bil, \"frist\"),\n    bil?.periodiskKjoretoykontroll?.kontrollfrist\n];\nconst euRaw = pick(euCands); // Plukker den første gyldige datoen fra listen din\n\nfunction formatDato(d) {\n    if (!d || d.length < 10) return \"Ikke oppgitt\";\n    const [y, m, day] = d.slice(0, 10).split(\"-\");\n    return `${day}.${m}.${y}`;\n}\n\n// 5. SEND UT DATA (Nøyaktig samme format som før)\nmsg.payload = {\n    found: true,\n    merke: merke.toString().toUpperCase(),\n    modell: modell.toString().toUpperCase(),\n    registrert: formatDato(regRaw),\n    eu_frist: formatDato(euRaw),\n    eu_farge: (euRaw && new Date(euRaw) < new Date()) ? '#be123c' : '#15803d'\n};\n\nreturn msg;",
-        "outputs": 1,
-        "timeout": "",
-        "noerr": 0,
-        "initialize": "",
-        "finalize": "",
-        "libs": [],
-        "x": 350,
-        "y": 100,
-        "wires": [
-            [
-                "design_final"
-            ]
-        ]
-    },
-    {
         "id": "design_final",
         "type": "ui-template",
         "z": "svv_bachelor_final_fix",
@@ -121,102 +298,287 @@
         "order": 2,
         "width": 6,
         "height": 4,
-        "format": "<div v-if=\"msg.payload && msg.payload.found\" style=\"background: white; padding: 25px; border-radius: 16px; border-left: 8px solid #0056b3; box-shadow: 0 10px 15px rgba(0,0,0,0.1); font-family: sans-serif;\">\n    \n    <div style=\"font-size: 0.75em; color: #666; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px;\">Kjøretøyidentitet</div>\n    <div style=\"font-size: 2.2em; font-weight: 900; color: #1a202c; margin-bottom: 25px; line-height: 1;\">\n        {{ msg.payload.merke }} <span style=\"color: #4a5568; font-weight: 300;\">{{ msg.payload.modell }}</span>\n    </div>\n\n    <div style=\"display: grid; grid-template-columns: 1fr 1fr; gap: 15px;\">\n        <div style=\"background: #f8fafc; padding: 15px; border-radius: 10px; border: 1px solid #e2e8f0;\">\n            <div style=\"font-size: 0.7em; color: #64748b; font-weight: bold; margin-bottom: 5px;\">FØRSTE REG. NORGE</div>\n            <div style=\"font-size: 1.2em; font-weight: 700; color: #1e293b;\">{{ msg.payload.registrert }}</div>\n        </div>\n        \n        <div :style=\"{ background: msg.payload.eu_status === 'expired' ? '#fff1f2' : '#f0fdf4', padding: '15px', borderRadius: '10px', border: '1px solid #e2e8f0' }\">\n            <div style=\"font-size: 0.7em; color: #64748b; font-weight: bold; margin-bottom: 5px;\">NESTE EU-KONTROLL</div>\n            <div :style=\"{ fontSize: '1.2em', fontWeight: '700', color: msg.payload.eu_status === 'expired' ? '#be123c' : '#15803d' }\">\n                {{ msg.payload.eu_frist }}\n            </div>\n        </div>\n    </div>\n</div>\n\n<div v-else style=\"padding: 20px; background: #fff1f2; border-radius: 12px; color: #be123c;\">\n    ⚠️ {{ msg.payload?.error || 'Venter på søk...' }}\n</div>",
+        "format": "<div style=\"font-family: Inter, Arial, sans-serif;\">\n\n  <div v-if=\"msg.payload && msg.payload.found\"\n       style=\"background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);\n              padding: 24px;\n              border-radius: 18px;\n              border: 1px solid #dbe7f3;\n              box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);\">\n\n    <div style=\"display:flex; justify-content:space-between; align-items:flex-start; gap:16px; margin-bottom:18px;\">\n      <div>\n        <div style=\"font-size:12px; color:#64748b; font-weight:700; text-transform:uppercase; letter-spacing:1.1px; margin-bottom:6px;\">\n          Kjøretøyoppslag\n        </div>\n\n        <div style=\"font-size:34px; font-weight:900; color:#0f172a; line-height:1; margin-bottom:8px;\">\n          {{ msg.payload.merke }}\n          <span style=\"font-weight:400; color:#475569;\">{{ msg.payload.modell }}</span>\n        </div>\n\n        <div style=\"font-size:14px; color:#64748b;\">\n          Oppslag mot kjøretøydata\n        </div>\n      </div>\n\n      <div :style=\"{\n            background: msg.payload.eu_farge === '#be123c' ? '#fff1f2' : '#f0fdf4',\n            color: msg.payload.eu_farge === '#be123c' ? '#be123c' : '#15803d',\n            border: msg.payload.eu_farge === '#be123c' ? '1px solid #fecdd3' : '1px solid #bbf7d0',\n            padding: '10px 14px',\n            borderRadius: '999px',\n            fontSize: '13px',\n            fontWeight: '800',\n            whiteSpace: 'nowrap'\n          }\">\n        {{ msg.payload.eu_farge === '#be123c' ? 'EU utløpt / må sjekkes' : 'EU gyldig' }}\n      </div>\n    </div>\n\n    <div style=\"display:grid; grid-template-columns: 1fr 1fr; gap:14px; margin-bottom:14px;\">\n      <div style=\"background:#ffffff; padding:16px; border-radius:14px; border:1px solid #e2e8f0;\">\n        <div style=\"font-size:11px; color:#64748b; font-weight:800; text-transform:uppercase; letter-spacing:0.8px; margin-bottom:8px;\">\n          Første registrering i Norge\n        </div>\n        <div style=\"font-size:22px; font-weight:800; color:#0f172a;\">\n          {{ msg.payload.registrert }}\n        </div>\n      </div>\n\n      <div style=\"background:#ffffff; padding:16px; border-radius:14px; border:1px solid #e2e8f0;\">\n        <div style=\"font-size:11px; color:#64748b; font-weight:800; text-transform:uppercase; letter-spacing:0.8px; margin-bottom:8px;\">\n          Neste EU-kontroll\n        </div>\n        <div :style=\"{\n              fontSize: '22px',\n              fontWeight: '800',\n              color: msg.payload.eu_farge || '#15803d'\n            }\">\n          {{ msg.payload.eu_frist }}\n        </div>\n      </div>\n    </div>\n\n    <div style=\"background:#eff6ff; border:1px solid #bfdbfe; color:#1d4ed8; padding:12px 14px; border-radius:12px; font-size:14px;\">\n      Resultatet er hentet og formatert fra backend-flyten i Node-RED.\n    </div>\n  </div>\n\n  <div v-else\n       style=\"background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);\n              border: 1px dashed #cbd5e1;\n              border-radius: 18px;\n              padding: 28px 22px;\n              text-align: center;\n              box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);\">\n\n    <div style=\"font-size:42px; margin-bottom:10px;\">🚗</div>\n\n    <div style=\"font-size:20px; font-weight:800; color:#0f172a; margin-bottom:8px;\">\n      Søk opp kjøretøy\n    </div>\n\n    <div style=\"font-size:14px; color:#64748b; max-width:420px; margin:0 auto 14px auto; line-height:1.5;\">\n      Skriv inn skiltnummer i feltet over for å hente informasjon om kjøretøyet.\n    </div>\n\n    <div v-if=\"msg.payload?.error\"\n         style=\"margin-top:12px; background:#fff1f2; color:#be123c; border:1px solid #fecdd3; padding:12px 14px; border-radius:12px; font-size:14px; font-weight:600;\">\n      {{ msg.payload.error }}\n    </div>\n  </div>\n\n</div>",
         "storeOutMessages": true,
         "passthru": true,
         "templateScope": "local",
         "className": "",
-        "x": 560,
-        "y": 100,
+        "x": 980,
+        "y": 40,
         "wires": [
             []
         ]
     },
     {
-        "id": "ui_group_final",
-        "type": "ui-group",
-        "name": "Kjøretøydata",
-        "page": "ui_page_final",
-        "width": "6",
-        "height": "1",
-        "showTitle": true,
+        "id": "268e0c6248dc2df1",
+        "type": "ui-button",
+        "z": "svv_bachelor_final_fix",
+        "group": "37c2dd99774015b8",
+        "name": "",
+        "label": "Legg til registrerings nummer",
+        "order": 2,
+        "width": 0,
+        "height": 0,
+        "emulateClick": false,
+        "tooltip": "",
+        "color": "",
+        "bgcolor": "",
         "className": "",
-        "visible": "true",
-        "disabled": "false",
-        "groupType": "default"
-    },
-    {
-        "id": "ui_page_final",
-        "type": "ui-page",
-        "name": "Søk",
-        "ui": "ui_base_final",
-        "path": "/home",
         "icon": "",
-        "layout": "grid",
-        "theme": "0d8f875f50376455",
-        "breakpoints": [
-            {
-                "name": "Default",
-                "px": "0",
-                "cols": "3"
-            },
-            {
-                "name": "Tablet",
-                "px": "576",
-                "cols": "6"
-            },
-            {
-                "name": "Small Desktop",
-                "px": "768",
-                "cols": "9"
-            },
-            {
-                "name": "Desktop",
-                "px": "1024",
-                "cols": "12"
-            }
+        "iconPosition": "left",
+        "payload": "",
+        "payloadType": "str",
+        "topic": "add_reserved",
+        "topicType": "msg",
+        "buttonColor": "",
+        "textColor": "",
+        "iconColor": "",
+        "enableClick": true,
+        "enablePointerdown": false,
+        "pointerdownPayload": "",
+        "pointerdownPayloadType": "str",
+        "enablePointerup": false,
+        "pointerupPayload": "",
+        "pointerupPayloadType": "str",
+        "x": 460,
+        "y": 260,
+        "wires": [
+            [
+                "2696daaa63e7d6f7"
+            ]
+        ]
+    },
+    {
+        "id": "2696daaa63e7d6f7",
+        "type": "function",
+        "z": "svv_bachelor_final_fix",
+        "name": "function 1",
+        "func": "let reserved = flow.get(\"reservedPlates\") || [];\nlet plate = flow.get(\"inputPlate\");\n\nif (!plate) return null;\n\nplate = String(plate).replace(/\\s+/g, \"\").toUpperCase();\n\nreserved = reserved.map(item => {\n    let value = (item && typeof item === \"object\") ? item.plate : item;\n    return { plate: String(value).replace(/\\s+/g, \"\").toUpperCase() };\n});\n\nreserved = reserved.filter((item, index, arr) =>\n    arr.findIndex(x => x.plate === item.plate) === index\n);\n\nconst alreadyExists = reserved.some(item => item.plate === plate);\n\nif (!alreadyExists) {\n    reserved.push({ plate });\n}\n\nflow.set(\"reservedPlates\", reserved);\nflow.set(\"inputPlate\", \"\");\n\nreturn [\n    { payload: reserved },\n    { payload: alreadyExists ? `Skilt finnes allerede: ${plate}` : `Skilt lagt til: ${plate}` }\n];",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 660,
+        "y": 260,
+        "wires": [
+            [
+                "ac54cf253a13352d",
+                "239521e904eba5bb"
+            ]
         ],
+        "outputLabels": [
+            "2"
+        ]
+    },
+    {
+        "id": "631219fb8d461eb3",
+        "type": "ui-text-input",
+        "z": "svv_bachelor_final_fix",
+        "group": "37c2dd99774015b8",
+        "name": "",
+        "label": "Reserver skilt",
+        "order": 1,
+        "width": 0,
+        "height": 0,
+        "topic": "reserved_plate",
+        "topicType": "msg",
+        "mode": "text",
+        "tooltip": "",
+        "delay": 300,
+        "passthru": true,
+        "sendOnDelay": false,
+        "sendOnBlur": true,
+        "sendOnEnter": false,
         "className": "",
-        "visible": "true",
-        "disabled": "false"
+        "clearable": false,
+        "sendOnClear": false,
+        "icon": "",
+        "iconPosition": "left",
+        "iconInnerPosition": "inside",
+        "x": 120,
+        "y": 200,
+        "wires": [
+            [
+                "05e812e45f6cd79b"
+            ]
+        ]
     },
     {
-        "id": "ui_base_final",
-        "type": "ui-base",
-        "name": "BilBase",
-        "path": "/dashboard",
-        "headerContent": "page",
-        "titleBarStyle": "default",
-        "showReconnectNotification": true,
-        "notificationDisplayTime": 5,
-        "showDisconnectNotification": true,
-        "allowInstall": true
+        "id": "05e812e45f6cd79b",
+        "type": "function",
+        "z": "svv_bachelor_final_fix",
+        "name": "storeInput",
+        "func": "let plate = msg.payload;\n\nif (!plate) return null;\n\nplate = plate.toString().replace(/\\s+/g, \"\").toUpperCase();\nflow.set(\"inputPlate\", plate);\n\nreturn null;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 280,
+        "y": 200,
+        "wires": [
+            []
+        ]
     },
     {
-        "id": "0d8f875f50376455",
-        "type": "ui-theme",
-        "name": "My Theme!",
-        "colors": {
-            "surface": "#ffffff",
-            "primary": "#0094ce",
-            "bgPage": "#eeeeee",
-            "groupBg": "#ffffff",
-            "groupOutline": "#cccccc"
-        },
-        "sizes": {
-            "density": "default",
-            "pagePadding": "12px",
-            "groupGap": "12px",
-            "groupBorderRadius": "4px",
-            "widgetGap": "12px"
-        }
+        "id": "eb12da3fa52acdd6",
+        "type": "ui-notification",
+        "z": "svv_bachelor_final_fix",
+        "ui": "ui_base_final",
+        "position": "top right",
+        "colorDefault": true,
+        "color": "#000000",
+        "displayTime": "4",
+        "showCountdown": true,
+        "outputs": 1,
+        "allowDismiss": true,
+        "dismissText": "Close",
+        "allowConfirm": false,
+        "confirmText": "Confirm",
+        "raw": false,
+        "className": "",
+        "name": "notification for reg number",
+        "x": 1030,
+        "y": 300,
+        "wires": [
+            []
+        ]
     },
     {
-        "id": "45fb63fd9eec4add",
-        "type": "global-config",
-        "env": [],
-        "modules": {
-            "@flowfuse/node-red-dashboard": "1.30.1"
-        }
+        "id": "239521e904eba5bb",
+        "type": "function",
+        "z": "svv_bachelor_final_fix",
+        "name": "notifText",
+        "func": "if (typeof msg.payload !== \"string\") {\n    if (Array.isArray(msg.payload)) {\n        const last = msg.payload[msg.payload.length - 1];\n        msg.payload = last && last.plate\n            ? `Skilt lagt til: ${last.plate}`\n            : \"Skilt oppdatert\";\n    } else {\n        msg.payload = \"Skilt oppdatert\";\n    }\n}\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 820,
+        "y": 300,
+        "wires": [
+            [
+                "eb12da3fa52acdd6"
+            ]
+        ]
+    },
+    {
+        "id": "39dd08e3dd0c8891",
+        "type": "ui-button",
+        "z": "svv_bachelor_final_fix",
+        "group": "37c2dd99774015b8",
+        "name": "Tøm liste",
+        "label": "Tøm liste",
+        "order": 4,
+        "width": 0,
+        "height": 0,
+        "emulateClick": false,
+        "tooltip": "",
+        "color": "",
+        "bgcolor": "",
+        "className": "",
+        "icon": "",
+        "iconPosition": "left",
+        "payload": "",
+        "payloadType": "str",
+        "topic": "topic",
+        "topicType": "msg",
+        "buttonColor": "",
+        "textColor": "",
+        "iconColor": "",
+        "enableClick": true,
+        "enablePointerdown": false,
+        "pointerdownPayload": "",
+        "pointerdownPayloadType": "str",
+        "enablePointerup": false,
+        "pointerupPayload": "",
+        "pointerupPayloadType": "str",
+        "x": 480,
+        "y": 200,
+        "wires": [
+            [
+                "95cdb4502cc5bda3"
+            ]
+        ]
+    },
+    {
+        "id": "95cdb4502cc5bda3",
+        "type": "function",
+        "z": "svv_bachelor_final_fix",
+        "name": "function 2",
+        "func": "flow.set(\"reservedPlates\", []);\n\nreturn [\n    { payload: [] },\n    { payload: \"Alle skilt slettet\" }\n];",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 640,
+        "y": 200,
+        "wires": [
+            [
+                "58447e2b8b0a5bdd",
+                "ac54cf253a13352d"
+            ]
+        ],
+        "outputLabels": [
+            "2"
+        ]
+    },
+    {
+        "id": "58447e2b8b0a5bdd",
+        "type": "ui-notification",
+        "z": "svv_bachelor_final_fix",
+        "ui": "ui_base_final",
+        "position": "top right",
+        "colorDefault": true,
+        "color": "#000000",
+        "displayTime": "3",
+        "showCountdown": true,
+        "outputs": 1,
+        "allowDismiss": true,
+        "dismissText": "Listen er tømt",
+        "allowConfirm": false,
+        "confirmText": "Confirm",
+        "raw": false,
+        "className": "",
+        "name": "Liste tømt",
+        "x": 820,
+        "y": 180,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "ac54cf253a13352d",
+        "type": "ui-table",
+        "z": "svv_bachelor_final_fix",
+        "group": "37c2dd99774015b8",
+        "name": "",
+        "label": "",
+        "order": 3,
+        "width": 0,
+        "height": 0,
+        "maxrows": "10",
+        "passthru": false,
+        "autocols": true,
+        "showSearch": true,
+        "deselect": true,
+        "selectionType": "none",
+        "columns": [],
+        "mobileBreakpoint": "sm",
+        "mobileBreakpointType": "defaults",
+        "action": "replace",
+        "className": "",
+        "x": 830,
+        "y": 240,
+        "wires": [
+            []
+        ]
     }
 ]

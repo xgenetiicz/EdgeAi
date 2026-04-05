@@ -51,8 +51,7 @@ Skiltet ble tatt i fart, og bommet svært lite i forhold til hva den gjorde før
 Disse bildene ligger under [BILDER SUKSESS](../PyTorch/success/) 
 
 
-> **Personvernmerknad: * - Eier av reporisiteriet aksepterer at bildene av min egen bil befinner seg for akademisk sensur og forståelse av hvordan prosjektet har utviklet seg* 
+> **Personvernmerknad: * - Eier av reporisiteriet (Genti Rudi) aksepterer at bildene av min egen bil befinner seg for akademisk sensur,prosjekt portefølje samt forståelse av hvordan prosjektet har utviklet seg* 
 
-* **Konklusjonen av testingen:** Dette viser også at den gjør feil - men det er optimalt med tanke på hardwaren som befinner seg for dette prosjektet med tanke på at selskaper har kameraer til over 60 000 kroner med en innebygd AI i dem.
-
+* **Konklusjonen av testingen:** Dette viser også at den gjør feil - men det er optimalt med tanke på hardwaren som befinner seg for dette prosjektet. Systemet fungerer og leverer skiltgjenkjenning i sanntid. Under testingen ble det benyttet et mobilt hotspot mellom Pi 4 og Pi 5, som resulterte i korrupte bildepakker i RTSP-strømmen. Dette påvirker bildekvaliteten EasyOCR mottar og må tolke. Med Ethernet eller stabilt WiFi er det grunn til å forvente vesentlig høyere presisjon.
 

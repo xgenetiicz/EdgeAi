@@ -243,7 +243,7 @@
         "y": 40,
         "wires": [
             [
-                "design_final"
+                "d1d8852d1ba39da1"
             ]
         ]
     },
@@ -263,8 +263,8 @@
         "passthru": true,
         "templateScope": "local",
         "className": "",
-        "x": 1220,
-        "y": 40,
+        "x": 1240,
+        "y": 100,
         "wires": [
             []
         ]
@@ -689,6 +689,122 @@
         "y": 740,
         "wires": [
             []
+        ]
+    },
+    {
+        "id": "45eaecdf099d9b25",
+        "type": "http in",
+        "z": "svv_bachelor_final_fix",
+        "name": "",
+        "url": "/esp/status",
+        "method": "get",
+        "upload": false,
+        "skipBodyParsing": false,
+        "swaggerDoc": "",
+        "x": 140,
+        "y": 320,
+        "wires": [
+            [
+                "e6e02305166dd170"
+            ]
+        ]
+    },
+    {
+        "id": "e6e02305166dd170",
+        "type": "function",
+        "z": "svv_bachelor_final_fix",
+        "name": "function 4",
+        "func": "const openUntil = flow.get(\"open_until\") || 0;\nconst shouldOpen = Date.now() < openUntil;\n\nmsg.payload = shouldOpen ? \"aapne\" : \"lukke\";\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 300,
+        "y": 320,
+        "wires": [
+            [
+                "fc41157e70498d82"
+            ]
+        ]
+    },
+    {
+        "id": "fc41157e70498d82",
+        "type": "http response",
+        "z": "svv_bachelor_final_fix",
+        "name": "Http response",
+        "statusCode": "",
+        "headers": {},
+        "x": 480,
+        "y": 320,
+        "wires": []
+    },
+    {
+        "id": "e9327dbe015e424e",
+        "type": "inject",
+        "z": "svv_bachelor_final_fix",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 100,
+        "y": 680,
+        "wires": [
+            [
+                "72cc4768daced28a"
+            ]
+        ]
+    },
+    {
+        "id": "72cc4768daced28a",
+        "type": "function",
+        "z": "svv_bachelor_final_fix",
+        "name": "Tvinge åpning av port",
+        "func": "flow.set(\"open_until\", Date.now() + 10000);\nreturn null;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 280,
+        "y": 680,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "d1d8852d1ba39da1",
+        "type": "function",
+        "z": "svv_bachelor_final_fix",
+        "name": "Sett bomstatus",
+        "func": "if (msg.payload && msg.payload.adgang_godkjent === true) {\n    flow.set(\"open_until\", Date.now() + 5000);\n}\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1240,
+        "y": 40,
+        "wires": [
+            [
+                "design_final"
+            ]
         ]
     }
 ]

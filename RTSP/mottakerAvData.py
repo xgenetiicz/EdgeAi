@@ -183,8 +183,21 @@ try:
                     print(f"---DEBUGGING: EASYOCR GJETTET SKILTNR SOM: '{samlet_tekst}' ", flush=True)
                     
                     # Regex leter etter nøyaktig 2 bokstaver og 5 tall i den samlede teksten.
-                    match = re.search(r'[A-Z]{2}[0-9]{5}', samlet_tekst) # denne er superviktig.
                     
+                    match = re.search(r'[A-Z]{2}[0-9]{5}', samlet_tekst) # denne er superviktig.
+
+                    #Legger til ulike regex valideringer sånn at EasyOCR kan ta hensyn til flere skilter
+                    #Dette blir gjort for å unngå unødvendig støy, så vi legger til for prøveskilt og personlige skilt bestilt
+                    #gjennom statens vegvesen.
+
+                    # Dette er for prøveskilt som har to bokstaver samt 4 siffer.
+                    if not match:
+                        match = re.search(r'[A-Z]{2}[0-9]{4}', samlet_tekst) 
+
+                    #Dette er for personlige skilt som f.eks: T3SLA
+                    if not match:
+                        match = re.search(r'[A-Z0-9]{2,7}', samlet_tekst) 
+                   
                     if match:
                         plate_text = match.group(0) # Dette blir det rene, norske skiltnummeret
                         cv2.putText(annotated_frame, f"SKILT: {plate_text}", (20, 40), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 3)
@@ -197,7 +210,7 @@ try:
                         skilt_lest = True
                         ocr_count = 0 
                         time.sleep(3) # Cooldown så vi ikke tar flere bilder av samme bil
-                
+
                 # Hvis AI så bil, men OCR ikke klarte å lese teksten
                 if not skilt_lest:
                     ocr_count += 1

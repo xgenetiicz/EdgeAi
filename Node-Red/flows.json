@@ -179,7 +179,7 @@
         "order": 1,
         "showTitle": true,
         "className": "",
-        "visible": true,
+        "visible": "true",
         "disabled": "false",
         "groupType": "default"
     },
@@ -350,8 +350,8 @@
         "enablePointerup": false,
         "pointerupPayload": "",
         "pointerupPayloadType": "str",
-        "x": 380,
-        "y": 200,
+        "x": 480,
+        "y": 300,
         "wires": [
             [
                 "2696daaa63e7d6f7"
@@ -363,23 +363,26 @@
         "type": "function",
         "z": "svv_bachelor_final_fix",
         "name": "function 1",
-        "func": "let reserved = flow.get(\"reservedPlates\") || [];\nlet plate = flow.get(\"inputPlate\");\n\nif (!plate) return null;\n\nplate = String(plate).replace(/\\s+/g, \"\").toUpperCase();\n\nreserved = reserved.map(item => {\n    let value = (item && typeof item === \"object\") ? item.plate : item;\n    return { plate: String(value).replace(/\\s+/g, \"\").toUpperCase() };\n});\n\nreserved = reserved.filter((item, index, arr) =>\n    arr.findIndex(x => x.plate === item.plate) === index\n);\n\nconst alreadyExists = reserved.some(item => item.plate === plate);\n\nif (!alreadyExists) {\n    reserved.push({ plate });\n}\n\nflow.set(\"reservedPlates\", reserved);\nflow.set(\"inputPlate\", \"\");\n\nreturn [\n    { payload: reserved },\n    { payload: alreadyExists ? `Skilt finnes allerede: ${plate}` : `Skilt lagt til: ${plate}` }\n];",
-        "outputs": 1,
+        "func": "let inputPlate = flow.get(\"inputPlate\") || msg.payload || \"\";\n\nlet plate = String(inputPlate)\n    .toUpperCase()\n    .replace(/\\s+/g, \"\")\n    .trim();\n\nif (!plate) {\n    return [\n        null,\n        { payload: \"Skriv inn et registreringsnummer først\" }\n    ];\n}\n\nif (!/^[A-Z]{2}[0-9]{5}$/.test(plate)) {\n    return [\n        null,\n        { payload: \"Ugyldig registreringsnummer. Bruk format som AB12345\" }\n    ];\n}\n\nlet list = flow.get(\"reservedPlates\") || [];\n\nlist = list\n    .map(item => {\n        if (typeof item === \"string\") {\n            return { plate: item };\n        }\n\n        return item;\n    })\n    .filter(item => item && item.plate);\n\nlet exists = list.some(item => {\n    let existingPlate = String(item.plate || \"\")\n        .toUpperCase()\n        .replace(/\\s+/g, \"\")\n        .trim();\n\n    return existingPlate === plate;\n});\n\nif (exists) {\n    return [\n        { payload: list },\n        { payload: `${plate} finnes allerede i listen` }\n    ];\n}\n\nlist.push({ plate });\n\nflow.set(\"reservedPlates\", list);\n\nreturn [\n    { payload: list },\n    { payload: `${plate} ble lagt til` }\n];",
+        "outputs": 2,
         "timeout": 0,
         "noerr": 0,
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 600,
-        "y": 200,
+        "x": 700,
+        "y": 300,
         "wires": [
             [
-                "ac54cf253a13352d",
+                "f73389267b8c0532"
+            ],
+            [
                 "239521e904eba5bb"
             ]
         ],
         "outputLabels": [
-            "2"
+            "2",
+            null
         ]
     },
     {
@@ -407,8 +410,8 @@
         "icon": "",
         "iconPosition": "left",
         "iconInnerPosition": "inside",
-        "x": 120,
-        "y": 140,
+        "x": 100,
+        "y": 300,
         "wires": [
             [
                 "05e812e45f6cd79b"
@@ -427,8 +430,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 280,
-        "y": 140,
+        "x": 260,
+        "y": 300,
         "wires": [
             []
         ]
@@ -451,8 +454,8 @@
         "raw": false,
         "className": "",
         "name": "notification for reg number",
-        "x": 970,
-        "y": 220,
+        "x": 1250,
+        "y": 320,
         "wires": [
             []
         ]
@@ -469,8 +472,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 780,
-        "y": 220,
+        "x": 880,
+        "y": 320,
         "wires": [
             [
                 "eb12da3fa52acdd6"
@@ -481,6 +484,7 @@
         "id": "39dd08e3dd0c8891",
         "type": "ui-button",
         "z": "svv_bachelor_final_fix",
+        "d": true,
         "group": "37c2dd99774015b8",
         "name": "Tøm liste",
         "label": "Tøm liste",
@@ -508,8 +512,8 @@
         "enablePointerup": false,
         "pointerupPayload": "",
         "pointerupPayloadType": "str",
-        "x": 440,
-        "y": 140,
+        "x": 580,
+        "y": 720,
         "wires": [
             [
                 "95cdb4502cc5bda3"
@@ -520,6 +524,7 @@
         "id": "95cdb4502cc5bda3",
         "type": "function",
         "z": "svv_bachelor_final_fix",
+        "d": true,
         "name": "function 2",
         "func": "flow.set(\"reservedPlates\", []);\n\nreturn [\n    { payload: [] },\n    { payload: \"Alle skilt slettet\" }\n];",
         "outputs": 1,
@@ -528,12 +533,11 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 600,
-        "y": 140,
+        "x": 740,
+        "y": 720,
         "wires": [
             [
-                "58447e2b8b0a5bdd",
-                "ac54cf253a13352d"
+                "58447e2b8b0a5bdd"
             ]
         ],
         "outputLabels": [
@@ -544,6 +548,7 @@
         "id": "58447e2b8b0a5bdd",
         "type": "ui-notification",
         "z": "svv_bachelor_final_fix",
+        "d": true,
         "ui": "ui_base_final",
         "position": "top right",
         "colorDefault": true,
@@ -558,8 +563,8 @@
         "raw": false,
         "className": "",
         "name": "Liste tømt",
-        "x": 780,
-        "y": 140,
+        "x": 920,
+        "y": 720,
         "wires": [
             []
         ]
@@ -568,6 +573,7 @@
         "id": "ac54cf253a13352d",
         "type": "ui-table",
         "z": "svv_bachelor_final_fix",
+        "d": true,
         "group": "37c2dd99774015b8",
         "name": "",
         "label": "",
@@ -585,8 +591,8 @@
         "mobileBreakpointType": "defaults",
         "action": "replace",
         "className": "",
-        "x": 770,
-        "y": 180,
+        "x": 1090,
+        "y": 660,
         "wires": [
             []
         ]
@@ -663,38 +669,6 @@
         ]
     },
     {
-        "id": "input_final",
-        "type": "ui-text-input",
-        "z": "svv_bachelor_final_fix",
-        "d": true,
-        "group": "ui_group_final",
-        "name": "Skilt",
-        "label": "Skriv skiltnummer",
-        "order": 1,
-        "width": 0,
-        "height": 0,
-        "topic": "payload",
-        "topicType": "str",
-        "mode": "text",
-        "tooltip": "",
-        "delay": 300,
-        "passthru": true,
-        "sendOnDelay": true,
-        "sendOnBlur": true,
-        "sendOnEnter": true,
-        "className": "",
-        "clearable": false,
-        "sendOnClear": false,
-        "icon": "",
-        "iconPosition": "left",
-        "iconInnerPosition": "inside",
-        "x": 90,
-        "y": 100,
-        "wires": [
-            []
-        ]
-    },
-    {
         "id": "1cc7231dc2dd3267",
         "type": "inject",
         "z": "svv_bachelor_final_fix",
@@ -751,8 +725,8 @@
         "upload": false,
         "skipBodyParsing": false,
         "swaggerDoc": "",
-        "x": 120,
-        "y": 400,
+        "x": 100,
+        "y": 520,
         "wires": [
             [
                 "e6e02305166dd170"
@@ -771,8 +745,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 300,
-        "y": 400,
+        "x": 280,
+        "y": 520,
         "wires": [
             [
                 "fc41157e70498d82"
@@ -786,8 +760,8 @@
         "name": "Http response",
         "statusCode": "",
         "headers": {},
-        "x": 480,
-        "y": 400,
+        "x": 460,
+        "y": 520,
         "wires": []
     },
     {
@@ -873,13 +847,13 @@
         ],
         "repeat": "",
         "crontab": "",
-        "once": false,
-        "onceDelay": 0.1,
+        "once": true,
+        "onceDelay": "0.5",
         "topic": "",
         "payload": "",
         "payloadType": "date",
-        "x": 100,
-        "y": 280,
+        "x": 90,
+        "y": 400,
         "wires": [
             [
                 "142b57aaa0df2afd"
@@ -898,8 +872,8 @@
         "winHide": false,
         "oldrc": false,
         "name": "Exec media for list",
-        "x": 290,
-        "y": 280,
+        "x": 270,
+        "y": 400,
         "wires": [
             [
                 "f6f2886e4f2f81ad"
@@ -920,8 +894,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 490,
-        "y": 280,
+        "x": 470,
+        "y": 400,
         "wires": [
             [
                 "7f11b9d391487ab3"
@@ -946,10 +920,108 @@
         "resendOnRefresh": true,
         "templateScope": "local",
         "className": "",
-        "x": 700,
-        "y": 280,
+        "x": 680,
+        "y": 400,
         "wires": [
             []
+        ]
+    },
+    {
+        "id": "f73389267b8c0532",
+        "type": "ui-template",
+        "z": "svv_bachelor_final_fix",
+        "group": "37c2dd99774015b8",
+        "page": "",
+        "ui": "",
+        "name": "Reserverte biler template",
+        "order": 0,
+        "width": 0,
+        "height": 0,
+        "head": "",
+        "format": "<template>\n    <div class=\"reserved-wrapper\">\n        <div class=\"search-box\">\n            <input\n        v-model=\"search\"\n        type=\"text\"\n        placeholder=\"Search\"\n      />\n        </div>\n\n        <table class=\"reserved-table\">\n            <thead>\n                <tr>\n                    <th>plate</th>\n                    <th class=\"delete-header\"></th>\n                </tr>\n            </thead>\n\n            <tbody>\n                <tr v-for=\"car in filteredRows\" :key=\"car.plate\">\n                    <td>{{ car.plate }}</td>\n                    <td class=\"delete-cell\">\n                        <button class=\"delete-btn\" @click=\"deletePlate(car.plate)\">\n              ✕\n            </button>\n                    </td>\n                </tr>\n\n                <tr v-if=\"filteredRows.length === 0\">\n                    <td colspan=\"2\" class=\"empty-row\">\n                        Ingen reserverte biler\n                    </td>\n                </tr>\n            </tbody>\n        </table>\n    </div>\n</template>\n\n<script>\n    export default {\n  data() {\n    return {\n      rows: [],\n      search: \"\"\n    }\n  },\n\n  watch: {\n    msg: {\n      handler(newMsg) {\n        if (!newMsg || !newMsg.payload) return\n\n        let list = newMsg.payload\n\n        if (!Array.isArray(list)) return\n\n        this.rows = list\n          .map(item => {\n            if (typeof item === \"string\") {\n              return { plate: item }\n            }\n\n            return item\n          })\n          .filter(item => item && item.plate)\n          .map(item => ({\n            plate: String(item.plate).toUpperCase().replace(/\\s+/g, \"\")\n          }))\n      },\n      deep: true,\n      immediate: true\n    }\n  },\n\n  computed: {\n    filteredRows() {\n      const q = this.search.toUpperCase().replace(/\\s+/g, \"\")\n\n      if (!q) {\n        return this.rows\n      }\n\n      return this.rows.filter(car =>\n        car.plate.includes(q)\n      )\n    }\n  },\n\n  methods: {\n    deletePlate(plate) {\n      this.send({\n        topic: \"deletePlate\",\n        payload: plate\n      })\n    }\n  }\n}\n</script>\n\n<style>\n    .reserved-wrapper {\n        width: 100%;\n    }\n\n    .search-box {\n        margin-bottom: 22px;\n    }\n\n    .search-box input {\n        width: 100%;\n        height: 46px;\n        padding: 0 14px;\n        font-size: 16px;\n        border: 1px solid #aaa;\n        border-radius: 3px;\n        box-sizing: border-box;\n    }\n\n    .reserved-table {\n        width: 100%;\n        border-collapse: collapse;\n        font-size: 15px;\n    }\n\n    .reserved-table th {\n        text-align: left;\n        padding: 14px 16px;\n        border-bottom: 1px solid #ddd;\n        font-weight: 700;\n    }\n\n    .reserved-table td {\n        padding: 14px 16px;\n        border-bottom: 1px solid #ddd;\n    }\n\n    .delete-header {\n        width: 60px;\n    }\n\n    .delete-cell {\n        text-align: right;\n    }\n\n    .delete-btn {\n        background: #ffd6d6;\n        color: #b00020;\n        border: none;\n        border-radius: 50%;\n        width: 32px;\n        height: 32px;\n        font-size: 18px;\n        font-weight: 700;\n        cursor: pointer;\n        line-height: 32px;\n    }\n\n    .delete-btn:hover {\n        background: #ffb8b8;\n    }\n\n    .empty-row {\n        color: #777;\n        text-align: center;\n        padding: 22px;\n    }\n</style>",
+        "storeOutMessages": true,
+        "passthru": false,
+        "resendOnRefresh": true,
+        "templateScope": "local",
+        "className": "",
+        "x": 930,
+        "y": 260,
+        "wires": [
+            [
+                "e9276e10bfcf05a6"
+            ]
+        ]
+    },
+    {
+        "id": "e9276e10bfcf05a6",
+        "type": "function",
+        "z": "svv_bachelor_final_fix",
+        "name": "Slett valgt skilt",
+        "func": "let plateToDelete = String(msg.payload || \"\")\n    .toUpperCase()\n    .replace(/\\s+/g, \"\")\n    .trim();\n\nlet list = flow.get(\"reservedPlates\") || [];\n\nlist = list\n    .map(item => {\n        if (typeof item === \"string\") {\n            return { plate: item };\n        }\n\n        return item;\n    })\n    .filter(item => item && item.plate);\n\nlet beforeCount = list.length;\n\nlist = list.filter(item => {\n    let plate = String(item.plate || \"\")\n        .toUpperCase()\n        .replace(/\\s+/g, \"\")\n        .trim();\n\n    return plate !== plateToDelete;\n});\n\nflow.set(\"reservedPlates\", list);\n\nmsg.payload = list;\n\nlet notification = {\n    payload: beforeCount === list.length\n        ? `${plateToDelete} ble ikke funnet`\n        : `${plateToDelete} ble slettet`\n};\n\nreturn [msg, notification];",
+        "outputs": 2,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1160,
+        "y": 260,
+        "wires": [
+            [
+                "f73389267b8c0532"
+            ],
+            [
+                "eb12da3fa52acdd6"
+            ]
+        ]
+    },
+    {
+        "id": "2079764af63fa28d",
+        "type": "function",
+        "z": "svv_bachelor_final_fix",
+        "name": "Last reserverte skilt",
+        "func": "let list = flow.get(\"reservedPlates\") || [];\n\nlist = list\n    .map(item => {\n        if (typeof item === \"string\") {\n            return { plate: item };\n        }\n        return item;\n    })\n    .filter(item => item && item.plate);\n\nmsg.payload = list;\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 650,
+        "y": 240,
+        "wires": [
+            [
+                "f73389267b8c0532"
+            ]
+        ]
+    },
+    {
+        "id": "8d4e413dbb055c3a",
+        "type": "inject",
+        "z": "svv_bachelor_final_fix",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": true,
+        "onceDelay": "0.5",
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 450,
+        "y": 240,
+        "wires": [
+            [
+                "2079764af63fa28d"
+            ]
         ]
     }
 ]

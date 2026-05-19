@@ -81,8 +81,8 @@ try:
             print("Mottok en korrupt datapakke eller korrupt databilde fra strømmen, hopper over bildet.", flush=True) 
             continue
 
-        #Vi sjekker for 15 fps faktisk, og sjekker 3 ganger i sekundet - så vi deler med en modul på 5 for ingen rest.
-        if frame_counter % 5 == 0:
+        #Vi analyserer hvert 15. bilde for å redusere belastningen på CPU.
+        if frame_counter % 15 == 0:
 
             #vi identifiserer hva modellen fant
             results = model(frame, verbose=False, conf=0.7) #conf er konfidensgrensen. Slik at modellen må være 70% sikker på at det den ser er en bil eller et skilt før den tegner bb og sender det til ocr. 

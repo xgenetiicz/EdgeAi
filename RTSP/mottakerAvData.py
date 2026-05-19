@@ -9,7 +9,14 @@ import re # NYTT: Importerer regex for å fiske ut norske skilt fra tekststøyen
 
 RTSP_PORT = os.getenv("RTSP_PORT") # Porten for RTSP-strømmen, legger frem her for forståelse av at dette ligger i .env
 RTSP_STREAM_BASE = os.getenv("RTSP_STREAM_URL") 
-RTSP_STREAM_URL = f"{RTSP_STREAM_BASE}:{RTSP_PORT}/bil" # RTSP URL for streaming med porten fra .env.
+
+###STORE ENDRINGER, FOR Å FÅ DETTE TIL Å FUNKE PÅ DEMONSTRASJONEN SÅ BLIR DET BRUKT EN PIXEL 10 FREMOVER.
+### VIDEO STREAMINGEN PÅ PI 4 KORTSLUTTET, SELVE KAMERAENHETEN OG BESTILLNG AV NYTT KAMERA NÅR IKKE FREM TIL DAGEN
+### VI SKAL DEMONSTRERE DETTE PÅ EN PIXEL 10, SLIK AT VI FORTSATT KAN VISE FUNKSJONALITETEN AV SYSTEMET.
+
+#RTSP_STREAM_URL = f"{RTSP_STREAM_BASE}:{RTSP_PORT}/bil"  --> dette var den originale RTSP URL-en for streaming fra Rasppberry Pi 4.
+
+RTSP_STREAM_URL = f"{RTSP_STREAM_BASE}:{RTSP_PORT}/video" # RTSP URL for streaming med porten fra .env. 
 
 #Har satt opp Tailscale der rasperry pi 4 og pi 5 snakker sammen og bruker Tailscale IP-adresser for å kommunisere. Dette gjør at vi kan sende bilder fra pi 4 til pi 5
 # uten å bekymre oss for nettverkskonfigurasjon, 

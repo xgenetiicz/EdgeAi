@@ -23,5 +23,5 @@ services:
       -f v4l2 -thread_queue_size 1024 -input_format mjpeg -video_size 1280x720 -framerate 30 
       -i /dev/video0 
       -vf "fps=15,format=nv12" 
-      -c:v h264_v4l2m2m -b:v 3M -maxrate 4M -bufsize 8M -g 15
+      -c:v h264_v4l2m2m -b:v 3M -maxrate 4M -bufsize 4M -g 15
       -f rtsp -rtsp_transport tcp -max_interleave_delta 100000 ${tailscale_pi4_url}

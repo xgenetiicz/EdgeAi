@@ -113,6 +113,10 @@ try:
                 
                 # LOGIKK: Klipp ut (crop) det vi fant før vi sender det til EasyOCR - vi sjekker først for license plate alltid ettersom dette er 
                 # det kritiske funksjonelle kravet for prosjektet -  uten skilt får vi ingen lagring eller videre logikk.
+
+                #Pad må bli definert før statements går gjennom.
+                 
+                pad = 15 # for nå er det bra, men ved flere tester og skalering må dette justeres.    
                 if plate_box:
                     # Vi mapper koordinatene til listen plate_box (DETTE ER KOORDINATER FRA if name == "license plate") og gjør dem alle desimaltall til heltall ved å sette dem til int.
                     # fordi det er fire uavhengige literaler for hver iterasjon av løkken, der hver x og y akse representer variabelen ulikt fordi bilen er i fart - og da endrer matten seg over 
@@ -124,7 +128,6 @@ try:
                     print(f"best.pt fant skiltet og tegnet en boks med koordinater: {x1}, {y1}, {x2}, {y2}", flush=True)
                     
                     # Vi har satt til padding rundt skiltet og bokstavene for å hjelpe EasyOCR me d å lese skiltet bedre, og se tydeligere forskjell mellom bokstavene og tallene.
-                    pad = 15 # for nå er det bra, men ved flere tester og skalering må dette justeres.
                     x1 = max(0, x1 - pad) # vi forteller at x1 og y1 er minimum 0 slik at vi ikke klipper utenfor - fordi det gir feil.
                     y1 = max(0, y1 - pad) # på grunn av x1 er venstre side av bildet og y1 er toppen av bildet, så må vi sørge for at vi ikke går under 0 når vi legger til padding.
                     x2 = min(frame.shape[1], x2 + pad)

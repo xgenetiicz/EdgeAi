@@ -19,6 +19,14 @@ services:
       - ${STORAGE_BASE}/gateway/data:/data
       - ${STORAGE_BASE}/gateway/config:/config
 
+  mediamtx:
+    image: bluenviron/mediamtx:latest
+    container_name: rtsp-server
+    restart: always
+    network_mode: host
+    volumes:
+      - ${STORAGE_BASE}/mediamtx/mediamtx.yml:/mediamtx.yml
+
   # 2. MQTT (Mosquitto) - Broker for Edge AI-data (ESP32-CAM)
   mqtt:
     image: eclipse-mosquitto:latest

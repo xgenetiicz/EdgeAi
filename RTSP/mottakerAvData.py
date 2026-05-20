@@ -71,13 +71,12 @@ else:
     print(f"RTSP-strømmen fungerer, henter video fra {RTSP_STREAM_URL}", flush=True)
 
 #Må sette en uendelig løkke slik at scriptet holder seg i live for å gjøre bildelogikken.
+cooldown_until = 0 
 try:
     while True:
         # Tving OpenCV til å hoppe over alle bildene som ligger i køen
         # slik at vi alltid analyserer det nyeste bildet fra kameraet
         ret, frame = cap.read() # Hent det ferskeste bildet
-
-        frame_counter += 1
 
         if not ret:
             print("Mistet forbindelsen til rtsp - strømmen, prøver å gjennoprette stream.", flush=True)
@@ -94,6 +93,11 @@ try:
         if frame is None or frame.size == 0: #sjekker om bildet er er lik 0 eller faktisk null.
             print("Mottok en korrupt datapakke eller korrupt databilde fra strømmen, hopper over bildet.", flush=True) 
             continue
+
+        frame_counter += 1
+
+        if time.time() < cooldown_until: # Hvis vi er i cooldown, hopper vi over resten av logikken og fortsetter til neste bilde
+            continue        
 
         #Vi analyserer hvert 3. bilde for å redusere belastningen på CPU.
         if frame_counter % 3 == 0:
@@ -213,7 +217,7 @@ try:
                         
                         skilt_lest = True
                         ocr_count = 0 
-                        time.sleep(3) # Cooldown så vi ikke tar flere bilder av samme bil
+                        cooldown_until = time.time() + 3 # Cooldown så vi ikke tar flere bilder av samme bil
                 
                 # Hvis AI så bil, men OCR ikke klarte å lese teksten
                 if not skilt_lest:
@@ -225,7 +229,7 @@ try:
                         save_path = os.path.join(DETECTION_PATH, f"feilet_lesing_{timestamp}.jpg")
                         cv2.imwrite(save_path, annotated_frame)
                         ocr_count = 0 
-                        time.sleep(3) # Cooldown før vi leter etter neste bil
+                        cooldown_until = time.time() + 3 # Cooldown før vi leter etter neste bil
             
             # Rydder opp telleren hvis bilen forsvinner
             else:

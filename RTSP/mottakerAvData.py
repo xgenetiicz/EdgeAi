@@ -89,8 +89,8 @@ try:
             print("Mottok en korrupt datapakke eller korrupt databilde fra strømmen, hopper over bildet.", flush=True) 
             continue
 
-        #Vi analyserer hvert 15. bilde for å redusere belastningen på CPU.
-        if frame_counter % 15 == 0:
+        #Vi analyserer hvert 3. bilde for å redusere belastningen på CPU.
+        if frame_counter % 3 == 0:
 
             #vi identifiserer hva modellen fant
             results = model(frame, verbose=False, conf=0.7, device='cuda') #conf er konfidensgrensen. Slik at modellen må være 70% sikker på at det den ser er en bil eller et skilt før den tegner bb og sender det til ocr. 

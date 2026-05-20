@@ -208,6 +208,10 @@ try:
                         skilt_lest = True
                         ocr_count = 0 
                         cooldown_until = time.time() + 3 # Cooldown så vi ikke tar flere bilder av samme bil
+
+                        #Tester noe spesielt. Skal slette hele bufferen ved å restarte streamen i nå tid.
+                        cap.release() # Vi frigjør strømmen for å tømme bufferen
+                        cap = cv2.VideoCapture(RTSP_STREAM_URL) # Starter strømmen på nytt
                 
                 # Hvis AI så bil, men OCR ikke klarte å lese teksten
                 if not skilt_lest:
@@ -220,6 +224,9 @@ try:
                         cv2.imwrite(save_path, annotated_frame)
                         ocr_count = 0 
                         cooldown_until = time.time() + 3 # Cooldown før vi leter etter neste bil
+                        
+                        cap.release() # Vi frigjør strømmen for å tømme bufferen
+                        cap = cv2.VideoCapture(RTSP_STREAM_URL) # Starter strømmen på nytt  
             # Rydder opp telleren hvis bilen forsvinner
             else:
                 ocr_count = 0

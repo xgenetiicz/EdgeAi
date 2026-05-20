@@ -40,9 +40,13 @@ print("Initialiserer 'hjernen' (YOLOv8 + OCR)", flush=True)
 model = YOLO("modeller/best.pt") # Bruker den trenede modellen som ligger i samme mappe. Sørg for at "best.pt" er der før oppstart. skal ligge på /media/genetiicz/pathtossd/modeller/best.pt
 model.to('cuda') # Flytter modellen til GPU for raskere inferens.
 
-reader = easyocr.Reader(['en'], gpu=False)
-print("Systemet er nå klart for å identifisere skilt.", flush=True)
-
+reader = easyocr.Reader(['en'], gpu=True) #Gjør en endring her - setter den til True slik at den bruker GPU.
+if reader.detector.net.is_cuda: # Sjekker om EasyOCR faktisk bruker GPU, og gir tilbakemelding i loggen.
+print("EasyOCR er initialisert med GPU-støtte for raskere skiltlesing.", flush=True)
+#print("Systemet er nå klart for å identifisere skilt.", flush=True)
+else: 
+print("Advarsel: EasyOCR kunne ikke initialiseres med GPU-støtte. Skiltlesing kan være tregere.", flush=True)
+    
 # Liste over objekter som skal trigge på lagring
 TARGET_OBJECTS = ["car", "license plate"] # "license plate" er nøkkelen for oppgaven - den skal trigger ocr lesingen (ikke bilen).
 

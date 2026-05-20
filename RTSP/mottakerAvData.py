@@ -93,7 +93,7 @@ try:
         if frame_counter % 3 == 0:
 
             #vi identifiserer hva modellen fant
-            results = model(frame, verbose=False, conf=0.7, device='cuda') #conf er konfidensgrensen. Slik at modellen må være 70% sikker på at det den ser er en bil eller et skilt før den tegner bb og sender det til ocr. 
+            results = model(frame, verbose=False, conf=0.7, device=0) #conf er konfidensgrensen. Slik at modellen må være 70% sikker på at det den ser er en bil eller et skilt før den tegner bb og sender det til ocr. 
             annotated_frame = results[0].plot() #Tegner bb automatisk 
 
             found_classes = set() # for å holde styr på hvilke klasser vi har funnet i bildet, set () er for unike verdier slik det ikke oppstår duplikater.

@@ -89,11 +89,11 @@ try:
         if time.time() < cooldown_until: # Hvis vi er i cooldown, hopper vi over analysen av dette bildet for å unngå å ta flere bilder av samme bil.
             continue
 
-        #Vi analyserer hvert 6 bilde i sekundet for å se om den klarer å takle det.
-        if frame_counter % 10 == 0:
+        #Vi analyserer hvert 3. bilde i sekundet for å se om den klarer å takle det.
+        if frame_counter % 3  == 0:
 
             #vi identifiserer hva modellen fant
-            results = model(frame, verbose=False, conf=0.7) #conf er konfidensgrensen. Slik at modellen må være 70% sikker på at det den ser er en bil eller et skilt før den tegner bb og sender det til ocr. 
+            results = model(frame, verbose=False, conf=0.5) #conf er konfidensgrensen. Slik at modellen må være 70% sikker på at det den ser er en bil eller et skilt før den tegner bb og sender det til ocr. 
             annotated_frame = results[0].plot() #Tegner bb automatisk 
 
             found_classes = set() # for å holde styr på hvilke klasser vi har funnet i bildet, set () er for unike verdier slik det ikke oppstår duplikater.

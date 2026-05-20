@@ -45,7 +45,7 @@ reader = easyocr.Reader(['en'], gpu=True) #Gjør en endring her - setter den til
 if torch.cuda.is_available(): # Sjekker om EasyOCR faktisk bruker GPU, og gir tilbakemelding i loggen.
     print("EasyOCR er initialisert med GPU-støtte for raskere skiltlesing.", flush=True)
 else: 
-print("Advarsel: EasyOCR kunne ikke initialiseres med GPU-støtte. EasyOCR går på CPU og Torch funker ikke", flush=True)
+    print("Advarsel: EasyOCR kunne ikke initialiseres med GPU-støtte. EasyOCR går på CPU og Torch funker ikke", flush=True)
     
 # Liste over objekter som skal trigge på lagring
 TARGET_OBJECTS = ["car", "license plate"] # "license plate" er nøkkelen for oppgaven - den skal trigger ocr lesingen (ikke bilen).

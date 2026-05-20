@@ -66,7 +66,7 @@ try:
     while True:
         # Tving OpenCV til å hoppe over alle bildene som ligger i køen
         # slik at vi alltid analyserer det nyeste bildet fra kameraet
-        for _ in range(10): # justerer tallet hvis det fortsatt går tregt.
+        for _ in range(1): # justerer tallet hvis det fortsatt går tregt.
             cap.grab() 
         
         ret, frame = cap.retrieve() # Hent det ferskeste bildet

@@ -1,42 +1,23 @@
-# Lettvekt Python-base
-#FROM python:3.11-slim
+FROM ubuntu:22.04
 
-# Bruker Pytorch med ROCm-støtte for AMD GPU.
-FROM rocm/pytorch:rocm6.2_ubuntu22.04_py3.10_pytorch_2.3
+ENV DEBIAN_FRONTEND=noninteractive
 
-# Vi kjører alt linje for linje for å unngå tegnfeil (spesialtegn)
-RUN apt-get update
-RUN apt-get install -y libgl1
-RUN apt-get install -y libglib2.0-0
-RUN rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y \
+    python3 python3-pip \
+    libgl1 libglib2.0-0 \
+    && rm -rf /var/lib/apt/lists/*
 
-# Arbeidsmappe i containeren
+# Samme kommando som i PyTorch.md
+RUN pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/rocm6.0
+
+RUN pip3 install --no-cache-dir ultralytics
+RUN pip3 install --no-cache-dir easyocr
+RUN pip3 install --no-cache-dir opencv-python-headless
+RUN python3 -c "import easyocr; easyocr.Reader(['en'])"
+
 WORKDIR /app
-
-# Installerer Python-biblioteker en etter en for å unngå spesialtegn problem
-RUN pip install --no-cache-dir flask
-RUN pip install --no-cache-dir numpy
-
-#opencv er nøkkelen for rtsp streaming.
-RUN pip install --no-cache-dir opencv-python-headless  
-RUN pip install --no-cache-dir ultralytics
-RUN pip install --no-cache-dir easyocr
-
-# Last ned AI-modeller under bygging
-RUN python -c "import easyocr; easyocr.Reader(['en'])"
-
-# Kopierer scriptet
 COPY RTSP/mottakerAvData.py .
+RUN mkdir -p /bilder /app/modeller
 
-# Lager bilde-mappen for SSD-en
-RUN mkdir -p /bilder
-
-#For å sikre at AI-modellen som lastes ned
-RUN mkdir -p /app/modeller 
-
-
-# Eksponerer port 5000
 EXPOSE 5000
-
-# Starter appen
-CMD ["python", "mottakerAvData.py"]
+CMD ["python3", "mottakerAvData.py"]

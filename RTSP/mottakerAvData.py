@@ -62,14 +62,12 @@ else:
     print(f"RTSP-strømmen fungerer, henter video fra {RTSP_STREAM_URL}", flush=True)
 
 #Må sette en uendelig løkke slik at scriptet holder seg i live for å gjøre bildelogikken.
+cooldown_until = 0 # dette er funn fra testingproject branchen.
 try:
     while True:
         # Tving OpenCV til å hoppe over alle bildene som ligger i køen
-        # slik at vi alltid analyserer det nyeste bildet fra kameraet
-        for _ in range(10): # justerer tallet hvis det fortsatt går tregt.
-            cap.grab() 
-        
-        ret, frame = cap.retrieve() # Hent det ferskeste bildet
+        # slik at vi alltid analyserer det nyeste bildet fra kameraet 
+        ret, frame = cap.read() # Hent det ferskeste bildet, og holde bufferen tom kontinuerlig.
 
         frame_counter += 1
 
@@ -88,8 +86,11 @@ try:
             print("Mottok en korrupt datapakke eller korrupt databilde fra strømmen, hopper over bildet.", flush=True) 
             continue
 
-        #Vi analyserer hvert 15. bilde for å redusere belastningen på CPU.
-        if frame_counter % 15 == 0:
+        if time.time() < cooldown_until: # Hvis vi er i cooldown, hopper vi over analysen av dette bildet for å unngå å ta flere bilder av samme bil.
+            continue
+
+        #Vi analyserer hvert 6 bilde i sekundet for å se om den klarer å takle det.
+        if frame_counter % 10 == 0:
 
             #vi identifiserer hva modellen fant
             results = model(frame, verbose=False, conf=0.7) #conf er konfidensgrensen. Slik at modellen må være 70% sikker på at det den ser er en bil eller et skilt før den tegner bb og sender det til ocr. 
@@ -206,7 +207,7 @@ try:
                         
                         skilt_lest = True
                         ocr_count = 0 
-                        time.sleep(3) # Cooldown så vi ikke tar flere bilder av samme bil
+                        cooldown_until = time.time() + 3 # Cooldown så vi ikke tar flere bilder av samme bil
                 
                 # Hvis AI så bil, men OCR ikke klarte å lese teksten
                 if not skilt_lest:
@@ -218,8 +219,7 @@ try:
                         save_path = os.path.join(DETECTION_PATH, f"feilet_lesing_{timestamp}.jpg")
                         cv2.imwrite(save_path, annotated_frame)
                         ocr_count = 0 
-                        time.sleep(3) # Cooldown før vi leter etter neste bil
-            
+                        cooldown_until = time.time() + 3 # Cooldown før vi leter etter neste bil
             # Rydder opp telleren hvis bilen forsvinner
             else:
                 ocr_count = 0

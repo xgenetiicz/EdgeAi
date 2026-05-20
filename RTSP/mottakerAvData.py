@@ -38,6 +38,7 @@ print("Initialiserer 'hjernen' (YOLOv8 + OCR)", flush=True)
 
 # Vi bruker 'modeller/best.pt' for å matche volum-mappingen i docker-compose
 model = YOLO("modeller/best.pt") # Bruker den trenede modellen som ligger i samme mappe. Sørg for at "best.pt" er der før oppstart. skal ligge på /media/genetiicz/pathtossd/modeller/best.pt
+model.to('cuda') # Flytter modellen til GPU for raskere inferens.
 
 reader = easyocr.Reader(['en'], gpu=False)
 print("Systemet er nå klart for å identifisere skilt.", flush=True)
@@ -92,7 +93,7 @@ try:
         if frame_counter % 15 == 0:
 
             #vi identifiserer hva modellen fant
-            results = model(frame, verbose=False, conf=0.7) #conf er konfidensgrensen. Slik at modellen må være 70% sikker på at det den ser er en bil eller et skilt før den tegner bb og sender det til ocr. 
+            results = model(frame, verbose=False, conf=0.7, device='cuda') #conf er konfidensgrensen. Slik at modellen må være 70% sikker på at det den ser er en bil eller et skilt før den tegner bb og sender det til ocr. 
             annotated_frame = results[0].plot() #Tegner bb automatisk 
 
             found_classes = set() # for å holde styr på hvilke klasser vi har funnet i bildet, set () er for unike verdier slik det ikke oppstår duplikater.

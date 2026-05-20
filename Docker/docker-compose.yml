@@ -82,7 +82,13 @@ services:
     container_name: image_processor
     restart: always
     ports:
-      - "5000:5000"
+      - "5000:5000" #Dette er for å kunne nå API - et som kjører i image-processor containeren, slik at vi kan sende bilder til det for prosessering.
+    devices:
+      - /dev/kfd:/dev/kfd 
+      - /dev/dri:/dev/dri #Gir tilgang til GPU for AMD 6700XT
+    group_add:
+      - video
+      - render
     volumes:
       # Nå ser begge containerne samme mappe via /bilder
       - ${STORAGE_BASE}/bilder:/bilder 
@@ -93,3 +99,4 @@ services:
       # .env variabler for rtsp - stream.
       - RTSP_PORT=${RTSP_PORT}
       - RTSP_STREAM_URL=${RTSP_STREAM_URL}
+      - HSA_OVERRIDE_GFX_VERSION=10.3.0 #Dette er for å få tilgang til AMD 6700XT

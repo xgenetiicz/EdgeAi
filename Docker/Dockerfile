@@ -1,5 +1,8 @@
 # Lettvekt Python-base
-FROM python:3.11-slim
+#FROM python:3.11-slim
+
+# Bruker Pytorch med ROCm-støtte for AMD GPU.
+FROM rocm/pytorch:rocm6.1_ubuntu22.04_py3.10_pytorch_2.1.1
 
 # Vi kjører alt linje for linje for å unngå tegnfeil (spesialtegn)
 RUN apt-get update

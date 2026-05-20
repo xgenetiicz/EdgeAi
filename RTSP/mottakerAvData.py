@@ -1,4 +1,5 @@
 import os
+import torch #for cuda.
 import time
 import cv2 # for tegning og bildebehandling slik at vi viser visuelt hva som blir identifisert!
 import numpy as np # Dette er for bildematriser
@@ -41,11 +42,10 @@ model = YOLO("modeller/best.pt") # Bruker den trenede modellen som ligger i samm
 model.to('cuda') # Flytter modellen til GPU for raskere inferens.
 
 reader = easyocr.Reader(['en'], gpu=True) #Gjør en endring her - setter den til True slik at den bruker GPU.
-if reader.detector.net.is_cuda: # Sjekker om EasyOCR faktisk bruker GPU, og gir tilbakemelding i loggen.
-print("EasyOCR er initialisert med GPU-støtte for raskere skiltlesing.", flush=True)
-#print("Systemet er nå klart for å identifisere skilt.", flush=True)
+if torch.cuda.is_available(): # Sjekker om EasyOCR faktisk bruker GPU, og gir tilbakemelding i loggen.
+    print("EasyOCR er initialisert med GPU-støtte for raskere skiltlesing.", flush=True)
 else: 
-print("Advarsel: EasyOCR kunne ikke initialiseres med GPU-støtte. Skiltlesing kan være tregere.", flush=True)
+print("Advarsel: EasyOCR kunne ikke initialiseres med GPU-støtte. EasyOCR går på CPU og Torch funker ikke", flush=True)
     
 # Liste over objekter som skal trigge på lagring
 TARGET_OBJECTS = ["car", "license plate"] # "license plate" er nøkkelen for oppgaven - den skal trigger ocr lesingen (ikke bilen).
@@ -57,6 +57,10 @@ ocr_count = 0
 #Vi lager en Videocapture objekt for å hente RTSP-strømmen fra pi 4, 
 #og vi bruker OpenCV for å håndtere videostrømmen.
 cap = cv2.VideoCapture(RTSP_STREAM_URL)
+
+# Reduserer bufferstørrelsen for å minimere forsinkelse og sikre at vi alltid analyserer det nyeste bildet fra kameraet.
+# Etter gjentatte tester, ser man at bufferen bygger seg opp og tar opp minne - og den analyserer ikke det ferskeste bildet.
+cap.set(cv2.CAP_PROP_BUFFERSIZE, 1) 
 
 #Hvis den ikke funker
 if not cap.isOpened():
@@ -71,10 +75,7 @@ try:
     while True:
         # Tving OpenCV til å hoppe over alle bildene som ligger i køen
         # slik at vi alltid analyserer det nyeste bildet fra kameraet
-        for _ in range(1): # justerer tallet hvis det fortsatt går tregt.
-            cap.grab() 
-        
-        ret, frame = cap.retrieve() # Hent det ferskeste bildet
+        ret, frame = cap.read() # Hent det ferskeste bildet
 
         frame_counter += 1
 
@@ -84,9 +85,10 @@ try:
                 print(f"Streamen gjenopprettes om {sekund} sekunder")
                 time.sleep(1)
 
-                print(f"Streamen tilkobles på nytt nå!", flush=True)
-                cap = cv2.VideoCapture(RTSP_STREAM_URL)
-                continue
+            print(f"Streamen tilkobles på nytt nå!", flush=True)
+            cap = cv2.VideoCapture(RTSP_STREAM_URL)
+            cap.set(cv2.CAP_PROP_BUFFERSIZE, 1) # Reduser bufferstørrelsen igjen etter gjenoppretting
+            continue
         
         #Sjekker for bildetap siden dette viste seg i loggen på portainer
         if frame is None or frame.size == 0: #sjekker om bildet er er lik 0 eller faktisk null.

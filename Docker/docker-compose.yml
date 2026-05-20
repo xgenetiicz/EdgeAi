@@ -86,9 +86,6 @@ services:
     devices:
       - /dev/kfd:/dev/kfd 
       - /dev/dri:/dev/dri #Gir tilgang til GPU for AMD 6700XT
-    group_add:
-      - video
-      - render
     volumes:
       # Nå ser begge containerne samme mappe via /bilder
       - ${STORAGE_BASE}/bilder:/bilder 

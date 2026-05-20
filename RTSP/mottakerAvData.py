@@ -77,9 +77,9 @@ try:
                 print(f"Streamen gjenopprettes om {sekund} sekunder")
                 time.sleep(1)
 
-                print(f"Streamen tilkobles på nytt nå!", flush=True)
-                cap = cv2.VideoCapture(RTSP_STREAM_URL)
-                continue
+            print(f"Streamen tilkobles på nytt nå!", flush=True)
+            cap = cv2.VideoCapture(RTSP_STREAM_URL)
+            continue
         
         #Sjekker for bildetap siden dette viste seg i loggen på portainer
         if frame is None or frame.size == 0: #sjekker om bildet er er lik 0 eller faktisk null.

@@ -10,6 +10,7 @@ services:
   gateway:
     image: caddy:latest
     container_name: gateway
+    network_mode: "host" #Bruker host network for å kunne bruke port 80 og 443 direkte.
     restart: always
     ports:
       - "80:80"

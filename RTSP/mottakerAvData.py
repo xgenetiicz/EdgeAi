@@ -1,5 +1,5 @@
 import os
-os.environ ["CUDA_VISIBLE_DEVICES"] = "0" # Har denne i .env på portainer, men legger den her for å være sikker på at den blir brukt og initalisert med en gang.
+os.environ["CUDA_VISIBLE_DEVICES"] = "0" # Har denne i .env på portainer, men legger den her for å være sikker på at den blir brukt og initalisert med en gang.
 import torch #for cuda.
 import time
 import cv2 # for tegning og bildebehandling slik at vi viser visuelt hva som blir identifisert!

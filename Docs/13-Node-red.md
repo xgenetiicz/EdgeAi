@@ -32,7 +32,8 @@ Dette viser illustrasjoner til hvordan dette fungerer visuelt messig, der det og
 Dette viser hvordan reservasjonen fungerer og ser ut.
 
 - **Bilhistorikk** — kronologisk logg over alle passeringer med tidspunkt og adgangsstatus
-![]
+![historikk](/Docs/NodeRedBilder/historikk.png)
+Slik ser bilhistorikken ut etter følgende tester.
 
 Nettsiden er ikke tilgjengelig basert på at dette er en stack som kjøres, og ettersom dette ikke er til daglig bruk som blir stacken satt på pause. Linken til siden er: `https://bachelor.gtztech.net/dashboard/` - men dette er satt opp med Cloudflare Zero Trust med OTP verifisering slik at sikkerheten er på plass.
 

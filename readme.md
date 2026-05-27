@@ -54,4 +54,5 @@ Her finner dere detaljert dokumentasjon for de ulike fasene og komponentene i pr
 * **[11 - Script endringer: Fra en `Flask server` til `RTSP-Stream`](/Docs/11-script-changes-and-tailscale.md):** Detaljer om nettverksprotokollene som ble endret og etter kritisk tenkning samt analyse, gikk valget over til Tailscale.
 Dokumentasjon også om `mottakerAvData.py` - der logikk strukturen ble endret.
 * **[12 - Systemtest, produksjonstest & Optimalisering](/Docs/12-testing-build.md):** Detaljer om den kritiske testfasen, fra første live - test med Global Shutter - kamera og RTSP - strøm, til diagnose og løsning av Out of Memory-krasj på Pi 4 -> (60fps -> 30fps, 8 -> 4 Mbps).
+* **[13 - Node-RED: Dashboard, Logikkflyt og Portstyring](/Docs/13-Node-red.md):** Detaljer om Node Red, sider publisert og resultater av tester og oppslag mot API, samt adgangskontroll med konfigurering med ESP32 og servo med bom.
 

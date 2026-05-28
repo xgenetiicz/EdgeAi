@@ -45,5 +45,4 @@ Nettsiden er ikke tilgjengelig basert på at dette er en stack som kjøres, og e
 GET /esp/status
 ```
  
-ESP32 poller dette endepunktet hvert 2. sekund og mottar enten `aapne` eller `lukke`. Endepunktet har Bypass-policy i Cloudflare Zero Trust siden det ikke eksponerer sensitiv informasjon. 
-
+ESP32 poller dette endepunktet hvert 2. sekund og mottar enten `aapne` eller `lukke`. Dette er lagt til ved en URL i Arduino hvor denne puller på status hentet fra angitt URL i koden.
